@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), { ssr: false });
 
 interface GraphData {
-  nodes: { id: string; name: string; val: number; group?: string }[];
+  nodes: { id: string; name: string; val: number; group?: string; hometown?: string | null; total_views?: number | null }[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   links: { source: string | any; target: string | any; type: string; year?: number | null; match_type?: string | null; match_format?: string | null }[];
 }
@@ -38,6 +38,13 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+
+  const selectedNode = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return graphData.nodes.find(n => n.id === selectedNodeId) || null;
+  }, [selectedNodeId, graphData]);
 
   // Reset selection on filter changes
   useEffect(() => {
@@ -55,10 +62,15 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
   const availableMatchTypes = useMemo(() => {
     const types = new Set<string>();
     graphData.links.forEach(link => {
-      if (link.match_type) types.add(link.match_type);
+      if (link.match_type) {
+        if (mode === 'Hierarchy' && !['tournament', 'non_tournament_judged'].includes(link.match_type)) {
+          return;
+        }
+        types.add(link.match_type);
+      }
     });
     return Array.from(types).sort();
-  }, [graphData]);
+  }, [graphData, mode]);
 
   const availableFormats = useMemo(() => {
     const formats = new Set<string>();
@@ -106,6 +118,47 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
 
     return { nodes, links };
   }, [graphData, selectedYear, mode, selectedMatchType, selectedFormat]);
+
+  const filteredSearchNodes = useMemo(() => {
+    if (!searchQuery) return [];
+    return displayData.nodes
+      .filter(n => n.group === 'Emcee' && n.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .slice(0, 10);
+  }, [searchQuery, displayData.nodes]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSearchSelect = (node: any) => {
+    setSearchQuery('');
+    setShowSearchDropdown(false);
+    setSelectedNodeId(node.id);
+    if (fgRef.current && node.x !== undefined && node.y !== undefined && node.z !== undefined) {
+      const distance = 200;
+      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+      fgRef.current.cameraPosition(
+        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+        node,
+        1500
+      );
+    } else {
+      // Fallback if simulation hasn't populated coordinates yet
+      setTimeout(() => {
+        if (fgRef.current) {
+          const updatedNode = displayData.nodes.find(n => n.id === node.id);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const un = updatedNode as any;
+          if (un && un.x !== undefined) {
+            const distance = 200;
+            const distRatio = 1 + distance / Math.hypot(un.x, un.y, un.z);
+            fgRef.current.cameraPosition(
+              { x: un.x * distRatio, y: un.y * distRatio, z: un.z * distRatio },
+              un,
+              1500
+            );
+          }
+        }
+      }, 500);
+    }
+  };
 
   const nodeStats = useMemo(() => {
     const stats: Record<string, { wins: number; losses: number; draws: number; total: number; winRate: number }> = {};
@@ -201,16 +254,44 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
   }, [displayData, mode]);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative group">
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+    <div ref={containerRef} className="w-full h-full relative group font-sans">
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-80 group-hover:opacity-100 transition-opacity w-64">
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-2 flex items-center justify-between gap-2">
-          <label htmlFor="year-select" className="text-sm text-[#A3A3A3]">Year:</label>
+        {/* Search Bar */}
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="Search Emcee..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSearchDropdown(true);
+            }}
+            onFocus={() => setShowSearchDropdown(true)}
+            className="w-full bg-[#191919] text-[#EFEFEF] border border-[#2F2F2F] rounded-md px-3 py-2 text-sm outline-none focus:border-[#5E87C9] placeholder-[#555] shadow-sm"
+          />
+          {showSearchDropdown && searchQuery && filteredSearchNodes.length > 0 && (
+            <div className="absolute top-full mt-1 w-full bg-[#191919] border border-[#2F2F2F] rounded-md shadow-lg overflow-hidden z-20">
+              {filteredSearchNodes.map(n => (
+                <button
+                  key={n.id}
+                  onClick={() => handleSearchSelect(n)}
+                  className="w-full text-left px-3 py-2 text-sm text-[#EFEFEF] hover:bg-[#2F2F2F] transition-colors"
+                >
+                  {n.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-[#191919] border border-[#2F2F2F] shadow-sm rounded-md px-3 py-2 flex items-center justify-between gap-2">
+          <label htmlFor="year-select" className="text-sm text-[#A3A3A3]">Year</label>
           <select
             id="year-select"
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="bg-[#2a2a2a] text-white border border-[#444] rounded px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
+            className="bg-[#202020] text-[#EFEFEF] border border-[#373737] rounded-md px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
           >
             <option value="All">All Years</option>
             {availableYears.map(y => (
@@ -219,13 +300,13 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           </select>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-2 flex items-center justify-between gap-2">
-          <label htmlFor="type-select" className="text-sm text-[#A3A3A3]">Type:</label>
+        <div className="bg-[#191919] border border-[#2F2F2F] shadow-sm rounded-md px-3 py-2 flex items-center justify-between gap-2">
+          <label htmlFor="type-select" className="text-sm text-[#A3A3A3]">Type</label>
           <select
             id="type-select"
             value={selectedMatchType}
             onChange={(e) => setSelectedMatchType(e.target.value)}
-            className="bg-[#2a2a2a] text-white border border-[#444] rounded px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
+            className="bg-[#202020] text-[#EFEFEF] border border-[#373737] rounded-md px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
           >
             <option value="All">All Types</option>
             {availableMatchTypes.map(t => (
@@ -234,20 +315,22 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           </select>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded px-3 py-2 flex items-center justify-between gap-2">
-          <label htmlFor="format-select" className="text-sm text-[#A3A3A3]">Format:</label>
-          <select
-            id="format-select"
-            value={selectedFormat}
-            onChange={(e) => setSelectedFormat(e.target.value)}
-            className="bg-[#2a2a2a] text-white border border-[#444] rounded px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
-          >
-            <option value="All">All Formats</option>
-            {availableFormats.map(f => (
-              <option key={f} value={f}>{FORMAT_LABELS[f] || f}</option>
-            ))}
-          </select>
-        </div>
+        {mode !== 'Hierarchy' && (
+          <div className="bg-[#191919] border border-[#2F2F2F] shadow-sm rounded-md px-3 py-2 flex items-center justify-between gap-2">
+            <label htmlFor="format-select" className="text-sm text-[#A3A3A3]">Format</label>
+            <select
+              id="format-select"
+              value={selectedFormat}
+              onChange={(e) => setSelectedFormat(e.target.value)}
+              className="bg-[#202020] text-[#EFEFEF] border border-[#373737] rounded-md px-2 py-1 text-sm outline-none focus:border-[#5E87C9] w-32"
+            >
+              <option value="All">All Formats</option>
+              {availableFormats.map(f => (
+                <option key={f} value={f}>{FORMAT_LABELS[f] || f}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {displayData.nodes.length === 0 ? (
@@ -405,6 +488,101 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           }}
         />
       )}
+
+      {/* Node Details Panel */}
+      {selectedNode && selectedNode.group === 'Emcee' && (
+        <div className="absolute left-6 top-24 z-20 w-80 bg-[#191919]/95 backdrop-blur-md border border-[#2F2F2F] rounded-md shadow-lg p-5 transition-all duration-300">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-semibold text-[#EFEFEF] truncate pr-2 tracking-tight">{selectedNode.name}</h2>
+            <button onClick={() => setSelectedNodeId(null)} className="text-[#A3A3A3] hover:text-[#EFEFEF] transition-colors">
+              ✕
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {selectedNode.hometown && (
+              <div>
+                <p className="text-xs text-[#A3A3A3] uppercase tracking-widest mb-1 font-medium">Hometown</p>
+                <p className="text-sm text-[#EFEFEF]">{selectedNode.hometown}</p>
+              </div>
+            )}
+            
+            {selectedNode.total_views != null && (
+              <div>
+                <p className="text-xs text-[#A3A3A3] uppercase tracking-widest mb-1 font-medium">Total Views</p>
+                <p className="text-sm text-[#EFEFEF] font-mono">{selectedNode.total_views.toLocaleString()}</p>
+              </div>
+            )}
+
+            <div className="border-t border-[#2F2F2F] pt-4 mt-4">
+              <p className="text-xs text-[#A3A3A3] uppercase tracking-widest mb-3 font-medium">Battle Statistics</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#202020] p-3 rounded-md border border-[#2F2F2F]">
+                  <p className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Matches</p>
+                  <p className="text-lg font-mono text-[#EFEFEF]">{nodeStats[selectedNode.id]?.total || 0}</p>
+                </div>
+                <div className="bg-[#202020] p-3 rounded-md border border-[#2F2F2F]">
+                  <p className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Win Rate</p>
+                  <p className="text-lg font-mono" style={{ color: getWinRateColor(nodeStats[selectedNode.id]?.winRate || 0.5) }}>
+                    {((nodeStats[selectedNode.id]?.winRate || 0) * 100).toFixed(1)}%
+                  </p>
+                </div>
+                <div className="bg-[#202020] p-3 rounded-md border border-[#2F2F2F]">
+                  <p className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Wins</p>
+                  <p className="text-lg font-mono text-[#4ade80]">{nodeStats[selectedNode.id]?.wins || 0}</p>
+                </div>
+                <div className="bg-[#202020] p-3 rounded-md border border-[#2F2F2F]">
+                  <p className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Losses</p>
+                  <p className="text-lg font-mono text-[#f87171]">{nodeStats[selectedNode.id]?.losses || 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="absolute bottom-6 left-6 z-20 bg-[#191919]/90 backdrop-blur-md border border-[#2F2F2F] rounded-md p-4 shadow-sm pointer-events-none select-none">
+        <h3 className="text-xs text-[#A3A3A3] uppercase tracking-widest font-medium mb-3">Legend</h3>
+        
+        <div className="flex gap-8">
+          <div className="space-y-2">
+            <p className="text-[10px] text-[#888] mb-2 uppercase tracking-wider font-semibold">Nodes</p>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-[#4ade80]"></div>
+              <span className="text-xs text-[#EFEFEF]">Emcee Win Rate</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-[#ffb84d]"></div>
+              <span className="text-xs text-[#EFEFEF]">Event</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[10px] text-[#888] mb-2 uppercase tracking-wider font-semibold">Edges</p>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-[#FFD700]"></div>
+              <span className="text-xs text-[#EFEFEF]">Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-[#ec4899]"></div>
+              <span className="text-xs text-[#EFEFEF]">Promo</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-[#06b6d4]"></div>
+              <span className="text-xs text-[#EFEFEF]">Tryout</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-[#718096]"></div>
+              <span className="text-xs text-[#EFEFEF]">Defeated / Battled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-[#ffb84d]"></div>
+              <span className="text-xs text-[#EFEFEF]">Attended Event</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

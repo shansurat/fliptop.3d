@@ -6,7 +6,8 @@ type Battle = {
   id: string;
   name?: string;
   match_type?: string;
-  status?: string;
+  match_format?: string;
+  view_count?: number;
   [key: string]: unknown;
 };
 
@@ -14,21 +15,21 @@ interface Props {
   initialBattles: Battle[];
   availableEvents?: { id: string; name: string }[];
   syncAction: () => Promise<{ success: boolean; count?: number; error?: string }>;
-  updateAction: (id: string, name: string, match_type: string, status: string, event_id: string | null) => Promise<{ success: boolean; error?: string }>;
-  createAction?: (name: string, match_type: string, status: string, event_id: string | null, match_format: string) => Promise<{ success: boolean; id?: string; error?: string }>;
+  updateAction: (id: string, name: string, match_type: string, match_format: string, event_id: string | null) => Promise<{ success: boolean; error?: string }>;
+  createAction?: (name: string, match_type: string, match_format: string, event_id: string | null) => Promise<{ success: boolean; id?: string; error?: string }>;
 }
 
 export default function BattlesClientPage({ initialBattles, availableEvents = [], syncAction, updateAction, createAction }: Props) {
   const [battles, setBattles] = useState<Battle[]>(initialBattles);
   const [isSyncing, setIsSyncing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', match_type: '', status: '', event_id: '' });
+  const [editForm, setEditForm] = useState({ name: '', match_type: '', match_format: '', event_id: '' });
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   
   const [isCreating, setIsCreating] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: '', match_type: 'tournament', status: 'completed', event_id: '', match_format: '1v1' });
+  const [createForm, setCreateForm] = useState({ name: '', match_type: 'tournament', match_format: '1v1', event_id: '' });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
@@ -64,7 +65,7 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
     setEditForm({
       name: battle.name || '',
       match_type: battle.match_type || '',
-      status: battle.status || '',
+      match_format: battle.match_format || '',
       event_id: (battle.event_id as string) || ''
     });
   };
@@ -79,7 +80,7 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
     
     try {
       const eId = editForm.event_id || null;
-      const result = await updateAction(editingId, editForm.name, editForm.match_type, editForm.status, eId);
+      const result = await updateAction(editingId, editForm.name, editForm.match_type, editForm.match_format, eId);
       if (result.success) {
         setMessage({ text: 'Successfully updated record in Neo4j.', type: 'success' });
         setBattles(battles.map(b => b.id === editingId ? { ...b, ...editForm, event_id: eId } : b));
@@ -99,12 +100,12 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
     setMessage(null);
     try {
       const eId = createForm.event_id || null;
-      const result = await createAction(createForm.name, createForm.match_type, createForm.status, eId, createForm.match_format);
+      const result = await createAction(createForm.name, createForm.match_type, createForm.match_format, eId);
       if (result.success && result.id) {
         setMessage({ text: 'Successfully created record in Neo4j.', type: 'success' });
-        setBattles([{ id: result.id, name: createForm.name, match_type: createForm.match_type, status: createForm.status, match_format: createForm.match_format, event_id: eId }, ...battles]);
+        setBattles([{ id: result.id, name: createForm.name, match_type: createForm.match_type, match_format: createForm.match_format, event_id: eId }, ...battles]);
         setIsCreating(false);
-        setCreateForm({ name: '', match_type: 'tournament', status: 'completed', event_id: '', match_format: '1v1' });
+        setCreateForm({ name: '', match_type: 'tournament', match_format: '1v1', event_id: '' });
       } else {
         setMessage({ text: `Create failed: ${result.error}`, type: 'error' });
       }
@@ -209,14 +210,14 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-[#A3A3A3] mb-1">Status</label>
+                  <label className="block text-sm text-[#A3A3A3] mb-1">Matchup Format</label>
                   <select
-                    value={createForm.status}
-                    onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
+                    value={createForm.match_format}
+                    onChange={(e) => setCreateForm({ ...createForm, match_format: e.target.value })}
                     className="w-full bg-[#202020] border border-[#2f2f2f] text-[#cfcfcf] rounded px-3 py-2 text-sm focus:border-[#5E87C9] focus:outline-none transition-colors"
                   >
-                    <option value="completed">Completed</option>
-                    <option value="upcoming">Upcoming</option>
+                    <option value="1v1">1v1</option>
+                    <option value="2v2">2v2</option>
                   </select>
                 </div>
               </div>
@@ -283,10 +284,13 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
                 Name {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('match_type')}>
-                Match Type {sortConfig?.key === 'match_type' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                Battle Type {sortConfig?.key === 'match_type' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
-              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('status')}>
-                Status {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('match_format')}>
+                Format {sortConfig?.key === 'match_format' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('view_count')}>
+                Views {sortConfig?.key === 'view_count' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('event_id')}>
                 Event {sortConfig?.key === 'event_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
@@ -297,7 +301,7 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
           <tbody className="divide-y divide-[#2f2f2f]">
             {battles.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-[#707070] text-sm">
+                <td colSpan={7} className="py-8 text-center text-[#707070] text-sm">
                   No records found in Neo4j. Try syncing from Supabase.
                 </td>
               </tr>
@@ -337,16 +341,19 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
                     <td className="py-2.5 px-3 text-sm text-[#cfcfcf]">
                       {editingId === battle.id ? (
                         <select
-                          value={editForm.status}
-                          onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                          value={editForm.match_format}
+                          onChange={(e) => setEditForm({ ...editForm, match_format: e.target.value })}
                           className="w-full bg-[#191919] border border-[#2f2f2f] text-[#cfcfcf] rounded px-2 py-1 text-sm focus:border-[#5E87C9] focus:outline-none transition-colors"
                         >
-                          <option value="completed">Completed</option>
-                          <option value="upcoming">Upcoming</option>
+                          <option value="1v1">1v1</option>
+                          <option value="2v2">2v2</option>
                         </select>
                       ) : (
-                        <span className="text-[#A3A3A3] capitalize">{battle.status || '-'}</span>
+                        <span className="text-[#A3A3A3] capitalize">{battle.match_format || '-'}</span>
                       )}
+                    </td>
+                    <td className="py-2.5 px-3 text-sm text-[#cfcfcf]">
+                      <span className="text-[#A3A3A3]">{battle.view_count ? battle.view_count.toLocaleString() : '-'}</span>
                     </td>
                     <td className="py-2.5 px-3 text-sm text-[#cfcfcf]">
                       {editingId === battle.id ? (

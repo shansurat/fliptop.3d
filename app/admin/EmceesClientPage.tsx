@@ -6,6 +6,7 @@ type Emcee = {
   id: string;
   stage_name?: string;
   hometown?: string;
+  total_views?: number;
   [key: string]: unknown;
 };
 
@@ -247,6 +248,9 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('hometown')}>
                 Hometown {sortConfig?.key === 'hometown' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
+              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('total_views')}>
+                Total Views {sortConfig?.key === 'total_views' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              </th>
               <th className="py-2 px-3 font-normal">Actions</th>
             </tr>
           </thead>
@@ -284,6 +288,9 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
                     ) : (
                       <span className="text-[#A3A3A3]">{emcee.hometown || '-'}</span>
                     )}
+                  </td>
+                  <td className="py-2.5 px-3 text-sm text-[#cfcfcf]">
+                    <span className="text-[#A3A3A3]">{emcee.total_views ? emcee.total_views.toLocaleString() : '-'}</span>
                   </td>
                   <td className="py-2.5 px-3 text-sm">
                     {editingId === emcee.id ? (

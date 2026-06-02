@@ -14,16 +14,16 @@ export default async function VisualizationAdminPage() {
   return (
     <div className="w-full h-screen bg-black text-white relative overflow-hidden">
       {/* Top-Center Mode Navigation */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-1 p-1 bg-[#1a1a1a] rounded-full border border-[#333] shadow-lg">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-0.5 p-1 bg-[#191919] rounded-md border border-[#2F2F2F] shadow-sm">
         <Link 
           href="/" 
-          className="px-6 py-2 rounded-full text-sm font-medium transition-colors bg-[#2a2a2a] text-white shadow-sm"
+          className="px-5 py-1.5 rounded-sm text-sm font-medium transition-colors bg-[#2F2F2F] text-[#EFEFEF]"
         >
           Standard
         </Link>
         <Link 
           href="/hierarchy" 
-          className="px-6 py-2 rounded-full text-sm font-medium transition-colors text-[#A3A3A3] hover:text-white hover:bg-[#222]"
+          className="px-5 py-1.5 rounded-sm text-sm font-medium transition-colors text-[#A3A3A3] hover:text-[#EFEFEF] hover:bg-[#252525]"
         >
           Hierarchy
         </Link>
@@ -39,8 +39,8 @@ export default async function VisualizationAdminPage() {
       </div>
 
       <div className="absolute bottom-6 right-6 z-10 pointer-events-auto">
-        <Link href="/admin" className="text-sm text-[#5E87C9] hover:text-[#7ba2e0] transition-colors bg-[#1a1a1a] border border-[#333] shadow-lg px-4 py-2 rounded-full backdrop-blur-sm">
-          Admin Login &rarr;
+        <Link href="/admin" className="text-sm text-[#A3A3A3] hover:text-[#EFEFEF] transition-colors bg-[#191919] border border-[#2F2F2F] shadow-sm px-4 py-2 rounded-md">
+          Admin &rarr;
         </Link>
       </div>
 

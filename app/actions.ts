@@ -13,6 +13,8 @@ export async function fetchGraphDataForVisualization() {
       RETURN n.id AS id, 
              labels(n)[0] AS group, 
              COALESCE(n.stage_name, n.event_name, 'Unknown') AS name, 
+             n.hometown AS hometown,
+             n.total_views AS total_views,
              battleCount
     `);
 
@@ -46,6 +48,8 @@ export async function fetchGraphDataForVisualization() {
         id: rec.get('id'),
         group,
         name: rec.get('name'),
+        hometown: rec.get('hometown') || null,
+        total_views: rec.get('total_views') ? rec.get('total_views').toNumber() : null,
         val
       };
     });

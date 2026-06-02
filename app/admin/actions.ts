@@ -36,11 +36,40 @@ async function fetchAllSupabaseRecords(tableName: string) {
 
 export async function syncFromSupabase() {
   try {
-    const emcees = await fetchAllSupabaseRecords('emcees');
+    let allEmcees: Record<string, unknown>[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (!emcees || emcees.length === 0) {
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('emcees')
+        .select('*, battle_participants(battles(view_count))')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedData = data.map((emcee: any) => {
+          const views = emcee.battle_participants?.reduce((sum: number, bp: any) => sum + (bp.battles?.view_count || 0), 0) || 0;
+          const { battle_participants, ...rest } = emcee;
+          return { ...rest, total_views: views };
+        });
+        allEmcees = [...allEmcees, ...formattedData];
+      }
+
+      if (!data || data.length < pageSize) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+    }
+
+    if (!allEmcees || allEmcees.length === 0) {
       return { success: true, count: 0 };
     }
+
+    const emcees = allEmcees;
 
     const driver = getNeo4jDriver();
     const session = driver.session();
@@ -164,7 +193,7 @@ export async function syncBattlesFromSupabase() {
   }
 }
 
-export async function updateBattle(id: string, name: string, match_type: string, status: string, event_id: string | null = null) {
+export async function updateBattle(id: string, name: string, match_type: string, match_format: string, event_id: string | null = null) {
   if (!id) return { success: false, error: 'ID is required' };
   
   const driver = getNeo4jDriver();
@@ -175,7 +204,7 @@ export async function updateBattle(id: string, name: string, match_type: string,
       await tx.run(
         `
         MATCH (b:Battle {id: $id})
-        SET b.name = $name, b.match_type = $match_type, b.status = $status
+        SET b.name = $name, b.match_type = $match_type, b.match_format = $match_format
         WITH b
         OPTIONAL MATCH (b)-[r:HELD_AT]->()
         DELETE r
@@ -193,7 +222,7 @@ export async function updateBattle(id: string, name: string, match_type: string,
         }
         RETURN b
         `,
-        { id, name, match_type, status, event_id }
+        { id, name, match_type, match_format, event_id }
       );
     });
     
@@ -208,7 +237,7 @@ export async function updateBattle(id: string, name: string, match_type: string,
   }
 }
 
-export async function createBattle(name: string, match_type: string, status: string, event_id: string | null = null, match_format: string = '1v1') {
+export async function createBattle(name: string, match_type: string, match_format: string = '1v1', event_id: string | null = null) {
   const driver = getNeo4jDriver();
   const session = driver.session();
   
@@ -217,7 +246,7 @@ export async function createBattle(name: string, match_type: string, status: str
     await session.executeWrite(async (tx) => {
       await tx.run(
         `
-        CREATE (b:Battle {id: $id, name: $name, match_type: $match_type, status: $status, match_format: $match_format})
+        CREATE (b:Battle {id: $id, name: $name, match_type: $match_type, match_format: $match_format})
         WITH b
         CALL {
           WITH b
@@ -232,7 +261,7 @@ export async function createBattle(name: string, match_type: string, status: str
         }
         RETURN b
         `,
-        { id, name, match_type, status, match_format, event_id }
+        { id, name, match_type, match_format, event_id }
       );
     });
     
