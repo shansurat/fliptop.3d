@@ -1,6 +1,6 @@
 import { getNeo4jDriver } from '@/lib/neo4j';
-import BattlesClientPage from './BattlesClientPage';
 import { syncBattlesFromSupabase, updateBattle } from '../actions';
+import BattlesClientPage from './BattlesClientPage';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,10 +28,10 @@ export default async function BattlesAdminPage() {
         </p>
       </div>
 
-      <BattlesClientPage 
-        initialBattles={battles} 
-        syncAction={syncBattlesFromSupabase} 
-        updateAction={updateBattle} 
+      <BattlesClientPage
+        initialBattles={battles}
+        syncAction={syncBattlesFromSupabase}
+        updateAction={updateBattle}
       />
     </div>
   );

@@ -10,6 +10,8 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
     { name: 'Emcees', href: '/admin/neo4j' },
     { name: 'Battles', href: '/admin/neo4j/battles' },
     { name: 'Opponents', href: '/admin/neo4j/participants' },
+    { name: 'Events', href: '/admin/neo4j/events' },
+    { name: '3D Graph', href: '/admin/neo4j/visualization' },
   ];
 
   return (
