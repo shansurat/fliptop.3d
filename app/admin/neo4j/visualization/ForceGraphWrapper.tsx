@@ -118,8 +118,8 @@ export default function GraphClient({ graphData }: { graphData: GraphData }) {
         if (fgRef.current) {
           if (graphMode === 'Hierarchy') {
             // Apply strong repulsive force to prevent nodes from clumping vertically
-            fgRef.current.d3Force('charge').strength(-200);
-            fgRef.current.d3Force('link').distance(50);
+            fgRef.current.d3Force('charge').strength(-400);
+            fgRef.current.d3Force('link').distance(100);
           } else {
             fgRef.current.d3Force('charge').strength(-30);
           }
@@ -279,7 +279,8 @@ export default function GraphClient({ graphData }: { graphData: GraphData }) {
           }}
           onNodeClick={(node: any) => {
             if (fgRef.current) {
-              const distance = 40;
+              // Increase distance for a wider field of view when focused
+              const distance = 200;
               const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
               fgRef.current.cameraPosition(
@@ -290,7 +291,7 @@ export default function GraphClient({ graphData }: { graphData: GraphData }) {
             }
           }}
           dagMode={graphMode === 'Hierarchy' ? 'td' : undefined}
-          dagLevelDistance={graphMode === 'Hierarchy' ? 200 : undefined}
+          dagLevelDistance={graphMode === 'Hierarchy' ? 300 : undefined}
           onEngineStop={() => {
             if (graphMode === 'Hierarchy' && fgRef.current) {
               fgRef.current.zoomToFit(400);
