@@ -108,6 +108,49 @@ export default function GraphClient({ graphData }: { graphData: GraphData }) {
     return { nodes, links };
   }, [graphData, selectedYear, graphMode, selectedMatchType, selectedFormat]);
 
+  const nodeStats = useMemo(() => {
+    const stats: Record<string, { wins: number; losses: number; draws: number; total: number; winRate: number }> = {};
+    
+    // Initialize stats
+    displayData.nodes.forEach(node => {
+      stats[node.id] = { wins: 0, losses: 0, draws: 0, total: 0, winRate: 0.5 };
+    });
+
+    displayData.links.forEach(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      if (!stats[sourceId]) stats[sourceId] = { wins: 0, losses: 0, draws: 0, total: 0, winRate: 0.5 };
+      if (!stats[targetId]) stats[targetId] = { wins: 0, losses: 0, draws: 0, total: 0, winRate: 0.5 };
+
+      if (link.type === 'DEFEATED') {
+        stats[sourceId].wins += 1;
+        stats[targetId].losses += 1;
+        stats[sourceId].total += 1;
+        stats[targetId].total += 1;
+      } else if (link.type === 'BATTLED') {
+        stats[sourceId].draws += 1;
+        stats[targetId].draws += 1;
+        stats[sourceId].total += 1;
+        stats[targetId].total += 1;
+      }
+    });
+
+    Object.values(stats).forEach(stat => {
+      if (stat.total > 0) {
+        stat.winRate = stat.wins / stat.total;
+      }
+    });
+
+    return stats;
+  }, [displayData]);
+
+  const getWinRateColor = (rate: number) => {
+    // Map 0 to 0 (Red), 0.5 to 60 (Yellow), 1.0 to 120 (Green)
+    const hue = rate * 120;
+    return `hsl(${Math.round(hue)}, 80%, 50%)`;
+  };
+
   const { highlightNodes, highlightLinks } = useMemo(() => {
     const hNodes = new Set<string>();
     const hLinks = new Set<any>();
@@ -254,7 +297,10 @@ export default function GraphClient({ graphData }: { graphData: GraphData }) {
               if (node.id === selectedNodeId) return '#FFFFFF';
               if (!highlightNodes.has(node.id)) return '#333333'; // Dimmed
             }
-            if (node.group === 'Emcee') return '#5E87C9';
+            if (node.group === 'Emcee') {
+              const rate = nodeStats[node.id]?.winRate ?? 0.5;
+              return getWinRateColor(rate);
+            }
             if (node.group === 'Event') return '#ffb84d';
             return '#888888';
           }}
