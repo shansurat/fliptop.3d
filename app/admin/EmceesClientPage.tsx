@@ -26,10 +26,10 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-  
+
   const [isCreating, setIsCreating] = useState(false);
   const [createForm, setCreateForm] = useState({ stage_name: '', hometown: '' });
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
@@ -73,7 +73,7 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
   const handleSaveEdit = async () => {
     if (!editingId) return;
     setMessage(null);
-    
+
     try {
       const result = await updateAction(editingId, editForm.stage_name, editForm.hometown);
       if (result.success) {
@@ -129,25 +129,25 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
     let result = [...emcees];
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(e => 
+      result = result.filter(e =>
         Object.values(e).some(val => String(val || '').toLowerCase().includes(q))
       );
     }
-    
+
     if (sortConfig) {
       result.sort((a, b) => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
 
         if (['total_views', 'view_count', 'year'].includes(sortConfig.key)) {
-           const numA = Number(aVal) || 0;
-           const numB = Number(bVal) || 0;
-           return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+          const numA = Number(aVal) || 0;
+          const numB = Number(bVal) || 0;
+          return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
         }
 
         const aStr = String(aVal || '').toLowerCase();
         const bStr = String(bVal || '').toLowerCase();
-        
+
         if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -170,7 +170,6 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-        <h2 className="text-lg font-bold text-[#EFEFEF] tracking-widest uppercase">Emcees</h2>
         <div className="flex gap-3">
           <button
             onClick={() => setIsCreating(true)}
@@ -245,9 +244,9 @@ export default function Neo4jClientPage({ initialEmcees, syncAction, updateActio
       )}
 
       <div className="mb-4">
-        <input 
-          type="text" 
-          placeholder="Search all columns..." 
+        <input
+          type="text"
+          placeholder="Search all columns..."
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);

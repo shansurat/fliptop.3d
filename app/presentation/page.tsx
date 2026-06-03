@@ -57,8 +57,8 @@ const slides: Slide[] = [
     subtitle: 'ROUND.05 // I HIT A WALL',
     description: 'Only assures 91.4% of judged data.',
     bullets: [
-      'Only assures 91.4% of judged data.',
-      'Tournament data might be lacking.',
+      'Limited data: Only assures 91.4% of judged data. Tournament data might be lacking.',
+      'Powerful admin: More extensive admin control'
     ],
   },
   {

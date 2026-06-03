@@ -41,7 +41,7 @@ const uuidv4 = () => {
   if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
     return window.crypto.randomUUID();
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
@@ -59,7 +59,7 @@ export default function BattlesClientPage({
   const [battles, setBattles] = useState<Battle[]>(initialBattles);
   const [isSyncing, setIsSyncing] = useState(false);
   const [editingBattle, setEditingBattle] = useState<Battle | null>(null);
-  
+
   const [editForm, setEditForm] = useState({
     name: '',
     match_type: 'tournament',
@@ -69,11 +69,11 @@ export default function BattlesClientPage({
     e2_id: '',
     outcome: '' as 'e1_won' | 'e2_won' | 'draw' | ''
   });
-  
+
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-  
+
   const [isCreating, setIsCreating] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: '',
@@ -84,7 +84,7 @@ export default function BattlesClientPage({
     e2_id: '',
     outcome: 'draw' as 'e1_won' | 'e2_won' | 'draw'
   });
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
@@ -105,10 +105,10 @@ export default function BattlesClientPage({
         setMessage({ text: `Battles sync failed: ${battlesResult.error}`, type: 'error' });
         return;
       }
-      
+
       setMessage({ text: `Battles synced (${battlesResult.count} records). Syncing matchup results...`, type: 'success' });
       const relationshipsResult = await syncRelationshipsAction();
-      
+
       if (relationshipsResult.success) {
         setMessage({
           text: `Successfully synced ${battlesResult.count} battles and ${relationshipsResult.count} matchup results from Supabase. Please refresh the page to view the latest data in the table.`,
@@ -128,7 +128,7 @@ export default function BattlesClientPage({
 
   const handleEditClick = (battle: Battle) => {
     setEditingBattle(battle);
-    
+
     let initialOutcome: 'e1_won' | 'e2_won' | 'draw' | '' = '';
     if (battle.outcome === 'DEFEATED') {
       initialOutcome = 'e1_won';
@@ -150,7 +150,7 @@ export default function BattlesClientPage({
   const handleSaveEdit = async () => {
     if (!editingBattle) return;
     setMessage(null);
-    
+
     if (editForm.e1_id && editForm.e1_id === editForm.e2_id) {
       setMessage({ text: 'Challenger 1 and Challenger 2 must be different Emcees.', type: 'error' });
       return;
@@ -175,11 +175,11 @@ export default function BattlesClientPage({
 
       if (result.success) {
         setMessage({ text: 'Successfully saved Battle and Result in Neo4j.', type: 'success' });
-        
+
         const e1Name = availableEmcees.find(e => e.id === e1Id)?.stage_name || null;
         const e2Name = availableEmcees.find(e => e.id === e2Id)?.stage_name || null;
         const eventName = availableEvents.find(e => e.id === eId)?.name || null;
-        
+
         setBattles(battles.map(b => b.id === editingBattle.id ? {
           ...b,
           name: editForm.name,
@@ -235,7 +235,7 @@ export default function BattlesClientPage({
         const e1Name = availableEmcees.find(e => e.id === e1Id)?.stage_name || null;
         const e2Name = availableEmcees.find(e => e.id === e2Id)?.stage_name || null;
         const eventName = availableEvents.find(e => e.id === eId)?.name || null;
-        
+
         setBattles([
           {
             id: newId,
@@ -293,25 +293,25 @@ export default function BattlesClientPage({
     let result = [...battles];
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(e => 
+      result = result.filter(e =>
         Object.values(e).some(val => String(val || '').toLowerCase().includes(q))
       );
     }
-    
+
     if (sortConfig) {
       result.sort((a, b) => {
         const aVal = a[sortConfig.key];
         const bVal = b[sortConfig.key];
 
         if (['total_views', 'view_count', 'year'].includes(sortConfig.key)) {
-           const numA = Number(aVal) || 0;
-           const numB = Number(bVal) || 0;
-           return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+          const numA = Number(aVal) || 0;
+          const numB = Number(bVal) || 0;
+          return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
         }
 
         const aStr = String(aVal || '').toLowerCase();
         const bStr = String(bVal || '').toLowerCase();
-        
+
         if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -334,7 +334,7 @@ export default function BattlesClientPage({
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-        <h2 className="text-lg font-bold text-[#EFEFEF] tracking-widest uppercase">Battles</h2>
+        {/* <h2 className="text-lg font-bold text-[#EFEFEF] tracking-widest uppercase">Battles</h2> */}
         <div className="flex gap-3">
           <button
             onClick={() => setIsCreating(true)}
@@ -612,9 +612,9 @@ export default function BattlesClientPage({
       )}
 
       <div className="mb-4">
-        <input 
-          type="text" 
-          placeholder="Search all columns..." 
+        <input
+          type="text"
+          placeholder="Search all columns..."
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -676,7 +676,7 @@ export default function BattlesClientPage({
                     <td className="py-2.5 px-3 text-xs text-[#cfcfcf]">
                       <span className="text-[#A3A3A3] capitalize">{battle.match_format || '-'}</span>
                     </td>
-                    
+
                     {/* Matchup & Result column */}
                     <td className="py-2.5 px-3 text-xs">
                       {battle.e1_id && battle.e2_id ? (
