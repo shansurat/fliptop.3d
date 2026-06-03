@@ -44,6 +44,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'winRate' | 'views' | 'wins' | 'losses'>('name');
   const [sizeBasis, setSizeBasis] = useState<'battles' | 'views'>('battles');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const selectedNode = useMemo(() => {
     if (!selectedNodeId) return null;
@@ -299,7 +300,19 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
 
   return (
     <div ref={containerRef} className="w-full h-full relative group font-sans">
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-80 group-hover:opacity-100 transition-opacity w-64">
+      {/* Mobile Menu FAB */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="md:hidden absolute bottom-6 left-6 z-[60] w-12 h-12 rounded-full bg-[#121212]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg pointer-events-auto transition-transform hover:scale-105 active:scale-95"
+      >
+        {isMobileMenuOpen ? (
+          <span className="text-xl">✕</span>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+        )}
+      </button>
+
+      <div className={`absolute z-[55] flex flex-col gap-2 transition-all duration-300 w-64 pointer-events-auto md:top-4 md:right-4 md:bottom-auto md:left-auto md:opacity-80 group-hover:md:opacity-100 md:translate-y-0 ${isMobileMenuOpen ? 'max-md:bottom-20 max-md:left-6 max-md:opacity-100 max-md:translate-y-0 max-md:max-h-[60vh] max-md:overflow-y-auto custom-scrollbar' : 'max-md:bottom-20 max-md:left-6 max-md:opacity-0 max-md:pointer-events-none max-md:translate-y-4'}`}>
 
         <div className='flex gap-2'>
           <select
@@ -668,7 +681,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
         </div>)} */}
 
       {selectedNode && selectedNode.group === 'Emcee' && (
-        <div className="absolute left-6 top-24 z-20 w-80 bg-[#121212]/30 backdrop-blur-md border border-white/5 rounded-lg overflow-hidden flex flex-col transition-all duration-300 opacity-90 hover:opacity-100 shadow-none">
+        <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[70vh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-4 md:pb-0 pointer-events-auto">
 
           {/* Portrait Header */}
           <div className="relative w-full bg-transparent">
@@ -758,7 +771,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
         const targetNode = graphData.nodes.find(n => n.id === targetId);
 
         return (
-          <div className="absolute left-6 top-24 z-20 w-80 bg-[#121212]/30 backdrop-blur-md border border-white/5 rounded-lg overflow-hidden flex flex-col transition-all duration-300 opacity-90 hover:opacity-100 shadow-none">
+          <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[70vh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-4 md:pb-0 pointer-events-auto">
             {/* Matchup Header */}
             <div className="relative w-full bg-transparent aspect-[16/10] overflow-hidden flex items-center justify-center border-b border-white/5 shrink-0">
               {/* Background Graphic or Gradient */}
@@ -868,7 +881,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
       })()}
 
       {/* Legend */}
-      <div className="absolute bottom-6 left-6 z-20 w-64 select-none pointer-events-auto transition-all duration-300 opacity-60 hover:opacity-100">
+      <div className="absolute bottom-6 left-6 z-20 w-64 select-none pointer-events-auto transition-all duration-300 opacity-60 hover:opacity-100 max-md:hidden">
         {/* Toggle Node Size Basis */}
         <div className="mb-4 flex flex-col gap-2">
           <p className="text-[9px] text-[#555] uppercase tracking-widest font-bold">Node Size Basis</p>
