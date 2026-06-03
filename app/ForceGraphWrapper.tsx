@@ -337,22 +337,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           />
         </div>
 
-        {mode !== 'Hierarchy' && (
-          <div className="bg-[#121212]/20 backdrop-blur-md border border-white/5 rounded-md px-3 py-1.5 flex items-center justify-between gap-2">
-            <label htmlFor="format-select" className="text-xs text-[#A3A3A3]">Format</label>
-            <select
-              id="format-select"
-              value={selectedFormat}
-              onChange={(e) => setSelectedFormat(e.target.value)}
-              className="bg-transparent text-[#A3A3A3] hover:text-[#EFEFEF] border border-white/5 rounded-md px-2 py-1 text-xs outline-none focus:border-white/20 w-32 cursor-pointer transition-colors"
-            >
-              <option value="All">All Formats</option>
-              {availableFormats.map(f => (
-                <option key={f} value={f}>{FORMAT_LABELS[f] || f}</option>
-              ))}
-            </select>
-          </div>
-        )}
+
 
         {/* Scrollable Emcees List */}
         <div className="bg-[#121212]/20 backdrop-blur-md border border-white/5 rounded-md flex flex-col overflow-hidden max-h-[300px]">
