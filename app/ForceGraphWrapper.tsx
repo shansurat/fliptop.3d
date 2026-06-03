@@ -681,7 +681,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
         </div>)} */}
 
       {selectedNode && selectedNode.group === 'Emcee' && (
-        <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[35dvh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-4 md:pb-0 pointer-events-auto">
+        <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[35dvh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-20 md:pb-0 pointer-events-auto">
 
           {/* Portrait Header */}
           <div className="relative w-full bg-transparent max-md:p-4 max-md:flex max-md:items-center max-md:gap-4 max-md:border-b max-md:border-white/5 shrink-0">
@@ -755,24 +755,24 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
 
               {/* Compact Mobile Stats */}
               <div className="md:hidden flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-md px-3 py-2 mt-1">
-                 <div className="flex items-center gap-1.5" title="Total Matches">
-                   <span className="text-xs">⚔️</span>
-                   <span className="text-sm font-mono text-[#EFEFEF]">{nodeStats[selectedNode.id]?.total || 0}</span>
-                 </div>
-                 <div className="flex items-center gap-1.5" title="Wins">
-                   <span className="text-xs">✅</span>
-                   <span className="text-sm font-mono text-[#4ade80]">{nodeStats[selectedNode.id]?.wins || 0}</span>
-                 </div>
-                 <div className="flex items-center gap-1.5" title="Losses">
-                   <span className="text-xs">❌</span>
-                   <span className="text-sm font-mono text-[#f87171]">{nodeStats[selectedNode.id]?.losses || 0}</span>
-                 </div>
-                 <div className="flex items-center gap-1.5 border-l border-white/10 pl-3" title="Win Rate">
-                   <span className="text-[10px] text-[#A3A3A3] uppercase tracking-wider font-bold">WR</span>
-                   <span className="text-sm font-mono font-bold" style={{ color: getWinRateColor(nodeStats[selectedNode.id]?.winRate || 0) }}>
-                     {(nodeStats[selectedNode.id]?.winRate * 100).toFixed(0)}%
-                   </span>
-                 </div>
+                <div className="flex items-center gap-1.5" title="Total Matches">
+                  <span className="text-xs">⚔️</span>
+                  <span className="text-sm font-mono text-[#EFEFEF]">{nodeStats[selectedNode.id]?.total || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5" title="Wins">
+                  <span className="text-xs">✅</span>
+                  <span className="text-sm font-mono text-[#4ade80]">{nodeStats[selectedNode.id]?.wins || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5" title="Losses">
+                  <span className="text-xs">❌</span>
+                  <span className="text-sm font-mono text-[#f87171]">{nodeStats[selectedNode.id]?.losses || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5 border-l border-white/10 pl-3" title="Win Rate">
+                  <span className="text-[10px] text-[#A3A3A3] uppercase tracking-wider font-bold">WR</span>
+                  <span className="text-sm font-mono font-bold" style={{ color: getWinRateColor(nodeStats[selectedNode.id]?.winRate || 0) }}>
+                    {(nodeStats[selectedNode.id]?.winRate * 100).toFixed(0)}%
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -793,7 +793,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
         const targetNode = graphData.nodes.find(n => n.id === targetId);
 
         return (
-          <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[35dvh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-4 md:pb-0 pointer-events-auto">
+          <div className="absolute z-[40] bg-[#121212]/95 md:bg-[#121212]/30 backdrop-blur-xl md:backdrop-blur-md border-t border-white/10 md:border md:border-white/5 overflow-hidden flex flex-col transition-all duration-300 opacity-100 md:opacity-90 hover:md:opacity-100 max-md:w-full max-md:bottom-0 max-md:left-0 max-md:rounded-t-2xl max-md:rounded-b-none max-md:top-auto max-md:max-h-[35dvh] md:w-80 md:left-6 md:top-24 md:rounded-lg shadow-2xl md:shadow-none pb-20 md:pb-0 pointer-events-auto mb-20">
             {/* Matchup Header */}
             <div className="relative w-full bg-transparent md:aspect-[16/10] overflow-hidden flex flex-col md:items-center justify-center border-b border-white/5 shrink-0 max-md:py-4">
               {/* Background Graphic or Gradient */}
@@ -907,21 +907,19 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           <div className="flex gap-4 border-b border-[#222] pb-1.5 w-full">
             <button
               onClick={() => setSizeBasis('battles')}
-              className={`text-[10px] font-bold tracking-wider transition-all -mb-[7px] pb-1 cursor-pointer ${
-                sizeBasis === 'battles' 
-                  ? 'text-[#EFEFEF] border-b border-[#EFEFEF]' 
-                  : 'text-[#555] hover:text-[#A3A3A3]'
-              }`}
+              className={`text-[10px] font-bold tracking-wider transition-all -mb-[7px] pb-1 cursor-pointer ${sizeBasis === 'battles'
+                ? 'text-[#EFEFEF] border-b border-[#EFEFEF]'
+                : 'text-[#555] hover:text-[#A3A3A3]'
+                }`}
             >
               BATTLES
             </button>
             <button
               onClick={() => setSizeBasis('views')}
-              className={`text-[10px] font-bold tracking-wider transition-all -mb-[7px] pb-1 cursor-pointer ${
-                sizeBasis === 'views' 
-                  ? 'text-[#EFEFEF] border-b border-[#EFEFEF]' 
-                  : 'text-[#555] hover:text-[#A3A3A3]'
-              }`}
+              className={`text-[10px] font-bold tracking-wider transition-all -mb-[7px] pb-1 cursor-pointer ${sizeBasis === 'views'
+                ? 'text-[#EFEFEF] border-b border-[#EFEFEF]'
+                : 'text-[#555] hover:text-[#A3A3A3]'
+                }`}
             >
               VIEWS
             </button>
