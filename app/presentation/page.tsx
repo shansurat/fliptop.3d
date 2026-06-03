@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 type Slide = {
@@ -62,18 +62,15 @@ const slides: Slide[] = [
   }
 ];
 
-function PresentationOverlayInner() {
+function PresentationPageInner() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const presentParam = searchParams.get('present');
-  const activeIndex = presentParam !== null ? parseInt(presentParam, 10) : -1;
-  const isOpen = activeIndex >= 0 && activeIndex < slides.length;
+  const slideParam = searchParams.get('slide');
+  const activeIndex = slideParam !== null ? parseInt(slideParam, 10) : 0;
+  const safeIndex = Math.max(0, Math.min(activeIndex, slides.length - 1));
 
   useEffect(() => {
-    if (!isOpen) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closePresentation();
@@ -88,104 +85,97 @@ function PresentationOverlayInner() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, activeIndex]);
+  }, [safeIndex]);
 
   const closePresentation = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('present');
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    router.push('/');
   };
 
   const setSlide = (index: number) => {
     if (index >= 0 && index < slides.length) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('present', index.toString());
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(`/presentation?slide=${index}`);
     }
   };
 
   const nextSlide = () => {
-    if (activeIndex < slides.length - 1) {
-      setSlide(activeIndex + 1);
+    if (safeIndex < slides.length - 1) {
+      setSlide(safeIndex + 1);
     }
   };
 
   const prevSlide = () => {
-    if (activeIndex > 0) {
-      setSlide(activeIndex - 1);
+    if (safeIndex > 0) {
+      setSlide(safeIndex - 1);
     }
   };
 
-  if (!isOpen) return null;
-
-  const currentSlide = slides[activeIndex];
+  const currentSlide = slides[safeIndex];
 
   return (
-    <div className="fixed inset-0 bg-[#080808]/98 backdrop-blur-sm z-[9999] flex flex-col justify-between p-8 md:p-12 text-zinc-300 font-mono">
+    <div className="min-h-screen bg-[#080808] flex flex-col justify-between p-12 lg:p-20 text-zinc-300 font-mono">
       {/* Top Header */}
-      <div className="flex justify-between items-center border-b border-white/5 pb-4 select-none">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-amber-500 bg-amber-950/20 border border-amber-500/20 px-2 py-0.5 rounded-sm tracking-widest uppercase">
+      <div className="flex justify-between items-center border-b border-white/5 pb-6 select-none">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-bold text-amber-500 bg-amber-950/20 border border-amber-500/20 px-3 py-1 rounded-sm tracking-widest uppercase">
             [ DECK // FLIPTOP.3D ]
           </span>
-          <span className="text-zinc-600 text-[10px]">ROUND.{String(activeIndex + 1).padStart(2, '0')}</span>
+          <span className="text-zinc-600 text-sm">ROUND.{String(safeIndex + 1).padStart(2, '0')}</span>
         </div>
         <button
           onClick={closePresentation}
-          className="text-[10px] text-zinc-500 hover:text-zinc-300 bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 px-2.5 py-1 rounded-sm transition-all cursor-pointer font-bold"
+          className="text-sm text-zinc-500 hover:text-zinc-300 bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 px-4 py-2 rounded-sm transition-all cursor-pointer font-bold"
         >
           CLOSE [ESC]
         </button>
       </div>
 
       {/* Slide Body */}
-      <div className="flex-1 my-6 flex items-center justify-center">
-        <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[#0c0c0c] border border-white/5 p-8 rounded-none relative shadow-2xl">
+      <div className="flex-1 my-12 flex items-center justify-center">
+        <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-12 gap-12 items-center bg-[#0c0c0c] border border-white/5 p-12 lg:p-16 rounded-none relative shadow-2xl">
 
           {/* Corner Crosshair Decorations to look like stencils/blueprints */}
-          <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 text-zinc-700 font-mono text-xs select-none pointer-events-none">+</div>
-          <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-zinc-700 font-mono text-xs select-none pointer-events-none">+</div>
-          <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 text-zinc-700 font-mono text-xs select-none pointer-events-none">+</div>
-          <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-zinc-700 font-mono text-xs select-none pointer-events-none">+</div>
+          <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 text-zinc-700 font-mono text-lg select-none pointer-events-none">+</div>
+          <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-zinc-700 font-mono text-lg select-none pointer-events-none">+</div>
+          <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 text-zinc-700 font-mono text-lg select-none pointer-events-none">+</div>
+          <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-zinc-700 font-mono text-lg select-none pointer-events-none">+</div>
 
           {/* Text Content */}
-          <div className={`${currentSlide.imageUrl ? 'md:col-span-7' : 'md:col-span-12'} flex flex-col justify-center space-y-4`}>
+          <div className={`${currentSlide.imageUrl ? 'md:col-span-7' : 'md:col-span-12'} flex flex-col justify-center space-y-6`}>
             {currentSlide.subtitle && (
-              <span className="text-[9px] text-amber-500/80 tracking-widest uppercase font-semibold">
+              <span className="text-sm md:text-base text-amber-500/80 tracking-widest uppercase font-semibold">
                 {currentSlide.subtitle}
               </span>
             )}
-            <h2 className="text-xl md:text-2xl font-extrabold text-[#EFEFEF] tracking-tight uppercase leading-tight font-sans">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#EFEFEF] tracking-tight uppercase leading-tight font-sans">
               {currentSlide.title}
             </h2>
 
             {currentSlide.description && (
-              <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl font-light font-sans">
+              <p className="text-lg md:text-2xl text-zinc-400 leading-relaxed max-w-4xl font-light font-sans">
                 {currentSlide.description}
               </p>
             )}
 
             {currentSlide.bullets && (
-              <ul className="space-y-3 pt-1">
+              <ul className="space-y-5 pt-4">
                 {currentSlide.bullets.map((bullet, i) => {
                   const colonIndex = bullet.indexOf(':');
                   if (colonIndex !== -1) {
                     const prefix = bullet.substring(0, colonIndex);
                     const rest = bullet.substring(colonIndex);
                     return (
-                      <li key={i} className="text-xs text-zinc-400 leading-relaxed flex items-start font-sans">
-                        <span className="text-amber-500/80 mr-2 font-mono select-none">[-]</span>
+                      <li key={i} className="text-lg md:text-2xl text-zinc-400 leading-relaxed flex items-start font-sans">
+                        <span className="text-amber-500/80 mr-3 font-mono select-none">[-]</span>
                         <span>
-                          <strong className="text-[#EFEFEF] font-mono tracking-wide uppercase text-[11px] block md:inline md:mr-1">{prefix}</strong>
+                          <strong className="text-[#EFEFEF] font-mono tracking-wide uppercase text-xl md:text-2xl block md:inline md:mr-2">{prefix}</strong>
                           {rest}
                         </span>
                       </li>
                     );
                   }
                   return (
-                    <li key={i} className="text-xs text-zinc-400 leading-relaxed flex items-start font-sans">
-                      <span className="text-amber-500/80 mr-2 font-mono select-none">[-]</span>
+                    <li key={i} className="text-lg md:text-2xl text-zinc-400 leading-relaxed flex items-start font-sans">
+                      <span className="text-amber-500/80 mr-3 font-mono select-none">[-]</span>
                       <span>{bullet}</span>
                     </li>
                   );
@@ -196,7 +186,7 @@ function PresentationOverlayInner() {
 
           {/* Image Content */}
           {currentSlide.imageUrl && (
-            <div className="md:col-span-5 relative flex items-center justify-center overflow-hidden rounded-none bg-black/40 border border-white/5 max-h-[40vh] md:max-h-[50vh] select-none min-h-[250px]">
+            <div className="md:col-span-5 relative flex items-center justify-center overflow-hidden rounded-none bg-black/40 border border-white/5 min-h-[400px] md:min-h-[500px] select-none">
               <Image
                 src={currentSlide.imageUrl}
                 alt={currentSlide.title}
@@ -210,19 +200,19 @@ function PresentationOverlayInner() {
       </div>
 
       {/* Bottom Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 gap-4 select-none">
+      <div className="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-8 gap-6 select-none">
 
         {/* Progress rounds / indices */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-zinc-600">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-zinc-600">
             DECK STATUS:
           </span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setSlide(i)}
-                className={`px-2 py-0.5 border text-[9px] cursor-pointer transition-all ${i === activeIndex
+                className={`px-4 py-1 border text-sm cursor-pointer transition-all ${i === safeIndex
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold'
                   : 'bg-transparent border-white/5 text-zinc-600 hover:text-zinc-300 hover:border-white/10'
                   }`}
@@ -235,19 +225,19 @@ function PresentationOverlayInner() {
         </div>
 
         {/* Previous / Next buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             onClick={prevSlide}
-            disabled={activeIndex === 0}
-            className="px-3 py-1.5 text-[10px] text-zinc-500 hover:text-zinc-300 bg-white/[0.01] border border-white/5 rounded-none disabled:opacity-20 disabled:hover:text-zinc-500 disabled:cursor-not-allowed transition-all cursor-pointer font-bold"
+            disabled={safeIndex === 0}
+            className="px-6 py-2 text-sm text-zinc-500 hover:text-zinc-300 bg-white/[0.01] border border-white/5 rounded-none disabled:opacity-20 disabled:hover:text-zinc-500 disabled:cursor-not-allowed transition-all cursor-pointer font-bold"
           >
             PREV
           </button>
-          <span className="text-[9px] text-zinc-700 select-none hidden md:inline">&lt; ARROWS &gt;</span>
+          <span className="text-sm text-zinc-700 select-none hidden md:inline">&lt; ARROWS &gt;</span>
           <button
             onClick={nextSlide}
-            disabled={activeIndex === slides.length - 1}
-            className="px-3 py-1.5 text-[10px] text-zinc-500 hover:text-zinc-300 bg-white/[0.01] border border-white/5 rounded-none disabled:opacity-20 disabled:hover:text-zinc-500 disabled:cursor-not-allowed transition-all cursor-pointer font-bold"
+            disabled={safeIndex === slides.length - 1}
+            className="px-6 py-2 text-sm text-zinc-500 hover:text-zinc-300 bg-white/[0.01] border border-white/5 rounded-none disabled:opacity-20 disabled:hover:text-zinc-500 disabled:cursor-not-allowed transition-all cursor-pointer font-bold"
           >
             NEXT
           </button>
@@ -258,10 +248,10 @@ function PresentationOverlayInner() {
   );
 }
 
-export default function PresentationOverlay() {
+export default function PresentationPage() {
   return (
     <Suspense fallback={null}>
-      <PresentationOverlayInner />
+      <PresentationPageInner />
     </Suspense>
   );
 }
