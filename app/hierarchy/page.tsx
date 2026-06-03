@@ -14,25 +14,25 @@ export default async function VisualizationAdminPage() {
   return (
     <div className="w-full h-screen bg-black text-white relative overflow-hidden">
       {/* Top-Center Mode Navigation */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-0.5 p-1 bg-[#191919] rounded-md border border-[#2F2F2F] shadow-sm">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-0.5 p-1 bg-[#121212]/30 backdrop-blur-md border border-white/5 rounded-md opacity-80 hover:opacity-100 transition-opacity duration-300">
         <Link
           href="/"
-          className="px-5 py-1.5 rounded-sm text-sm font-medium transition-colors text-[#A3A3A3] hover:text-[#EFEFEF] hover:bg-[#252525]"
+          className="px-4 py-1.5 rounded-md text-xs font-medium transition-all text-[#A3A3A3] hover:text-[#EFEFEF] hover:bg-white/[0.03]"
         >
           Standard
         </Link>
         <Link
           href="/hierarchy"
-          className="px-5 py-1.5 rounded-sm text-sm font-medium transition-colors bg-[#2F2F2F] text-[#EFEFEF]"
+          className="px-4 py-1.5 rounded-md text-xs font-medium transition-all bg-white/[0.07] text-[#EFEFEF]"
         >
           Hierarchy
         </Link>
       </div>
 
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-10 pointer-events-none">
-        <div className="pointer-events-auto">
-          <h1 className="text-3xl font-semibold text-[#FFFFFF] tracking-tight drop-shadow-md mb-1">fliptop.3d</h1>
-          <p className="text-[#A3A3A3] text-sm drop-shadow-md">
+        <div className="pointer-events-auto opacity-60 hover:opacity-100 transition-opacity duration-300 select-none">
+          <h1 className="text-lg font-bold text-[#EFEFEF] tracking-widest uppercase mb-1">fliptop.3d</h1>
+          <p className="text-[#666] text-[10px] tracking-wider uppercase max-w-xs leading-relaxed">
             Interactive WebGL visualization of Emcees, Battles, and Events.
           </p>
         </div>

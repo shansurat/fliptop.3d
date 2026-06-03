@@ -490,7 +490,19 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           linkColor={(link: any) => {
             if (selectedNodeId || selectedLink) {
-              if (highlightLinks.has(link)) return '#FFFFFF';
+              if (highlightLinks.has(link)) {
+                if (link.type === 'DEFEATED') {
+                  const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                  const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                  if (selectedNodeId) {
+                    if (sourceId === selectedNodeId) return '#4ade80'; // Win
+                    if (targetId === selectedNodeId) return '#f87171'; // Loss
+                  } else if (selectedLink) {
+                    return '#4ade80'; // Highlight victory direction
+                  }
+                }
+                return '#FFFFFF';
+              }
               return '#1a1a1a'; // Dimmed
             }
             if (link.type === 'ATTENDED') return '#b45309'; // Darker gold/orange
@@ -511,7 +523,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
             }
 
             if (selectedNodeId || selectedLink) {
-              if (highlightLinks.has(link)) return baseWidth * 3.5;
+              if (highlightLinks.has(link)) return baseWidth * 1.2;
               return 0.05; // Very thin for dimmed links
             }
             return baseWidth;
@@ -529,7 +541,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           linkDirectionalParticleSpeed={(link: any) => {
             if ((selectedNodeId || selectedLink) && highlightLinks.has(link)) {
-              return -0.01; // Negative speed reverses flow (In for win, Out for defeat)
+              return -0.003; // Negative speed reverses flow (In for win, Out for defeat)
             }
             if (link.match_type === 'tournament') return 0.008;
             if (link.match_format === 'royal_rumble') return 0.012;
@@ -538,7 +550,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           linkDirectionalParticleWidth={(link: any) => {
             if ((selectedNodeId || selectedLink) && highlightLinks.has(link)) {
-              return 4; // Extra large particles for highlighted links
+              return 1.8; // Subtle particles for highlighted links
             }
             if (link.match_type === 'tournament') return 1.8;
             if (['2v2', '3v3', '5v5'].includes(link.match_format)) return 1.5;
