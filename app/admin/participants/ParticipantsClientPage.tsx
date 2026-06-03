@@ -18,9 +18,10 @@ interface Props {
   syncAction: () => Promise<{ success: boolean; count?: number; error?: string }>;
   updateAction: (e1_id: string, e2_id: string, battle_id: string, newOutcome: 'e1_won' | 'e2_won' | 'draw') => Promise<{ success: boolean; error?: string }>;
   createAction?: (e1_id: string, e2_id: string, battle_id: string, outcome: 'e1_won' | 'e2_won' | 'draw') => Promise<{ success: boolean; error?: string }>;
+  deleteAction?: (e1_id: string, e2_id: string, battle_id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function ParticipantsClientPage({ initialRelationships, availableEmcees = [], availableBattles = [], syncAction, updateAction, createAction }: Props) {
+export default function ParticipantsClientPage({ initialRelationships, availableEmcees = [], availableBattles = [], syncAction, updateAction, createAction, deleteAction }: Props) {
   const [relationships, setRelationships] = useState<Relationship[]>(initialRelationships);
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -141,6 +142,24 @@ export default function ParticipantsClientPage({ initialRelationships, available
     }
   };
 
+  const handleDelete = async (rel: Relationship) => {
+    if (!deleteAction) return;
+    if (!confirm('Are you sure you want to delete this relationship?')) return;
+    setMessage(null);
+    try {
+      const result = await deleteAction(rel.e1_id, rel.e2_id, rel.battle_id);
+      if (result.success) {
+        setMessage({ text: 'Successfully deleted relationship.', type: 'success' });
+        setRelationships(relationships.filter(r => getEdgeKey(r) !== getEdgeKey(rel)));
+      } else {
+        setMessage({ text: `Delete failed: ${result.error}`, type: 'error' });
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      setMessage({ text: 'An unexpected error occurred during deletion.', type: 'error' });
+    }
+  };
+
   const filteredRelationships = useMemo(() => {
     let result = [...relationships];
     if (searchQuery) {
@@ -176,7 +195,7 @@ export default function ParticipantsClientPage({ initialRelationships, available
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-8 border-b border-[#2f2f2f] pb-4">
-        <h2 className="text-xl font-semibold text-[#cfcfcf]">Emcee Relationships</h2>
+        <h2 className="text-xl font-semibold text-[#cfcfcf]">Results</h2>
         <div className="flex gap-3">
           {createAction && (
             <button
@@ -307,7 +326,7 @@ export default function ParticipantsClientPage({ initialRelationships, available
           <thead>
             <tr className="text-[#707070] text-sm border-b border-[#2f2f2f]">
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('battle_id')}>
-                Battle ID {sortConfig?.key === 'battle_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                Battle {sortConfig?.key === 'battle_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
               <th className="py-2 px-3 font-normal text-right cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('e1_name')}>
                 Emcee 1 {sortConfig?.key === 'e1_name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
@@ -331,10 +350,11 @@ export default function ParticipantsClientPage({ initialRelationships, available
             ) : (
               paginatedRelationships.map((rel) => {
                 const isEditing = editingKey === getEdgeKey(rel);
+                const battleName = availableBattles.find(b => b.id === rel.battle_id)?.name || 'Unknown Battle';
                 
                 return (
                   <tr key={getEdgeKey(rel)} className="hover:bg-[#202020] transition-colors group">
-                    <td className="py-2.5 px-3 text-[#707070] text-sm font-mono">{rel.battle_id.substring(0, 8)}...</td>
+                    <td className="py-2.5 px-3 text-[#cfcfcf] text-sm">{battleName}</td>
                     <td className="py-2.5 px-3 text-sm text-[#cfcfcf] font-medium text-right">{rel.e1_name || 'Unknown'}</td>
                     <td className="py-2.5 px-3 text-sm text-center">
                       {isEditing ? (
@@ -361,7 +381,12 @@ export default function ParticipantsClientPage({ initialRelationships, available
                           <button onClick={handleCancelEdit} className="text-[#707070] hover:text-[#A3A3A3] transition-colors">Cancel</button>
                         </div>
                       ) : (
-                        <button onClick={() => handleEditClick(rel)} className="text-[#707070] hover:text-[#cfcfcf] opacity-0 group-hover:opacity-100 transition-all">Edit Outcome</button>
+                        <div className="flex gap-3">
+                          <button onClick={() => handleEditClick(rel)} className="text-[#707070] hover:text-[#cfcfcf] opacity-0 group-hover:opacity-100 transition-all">Edit Outcome</button>
+                          {deleteAction && (
+                            <button onClick={() => handleDelete(rel)} className="text-[#eb5757] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">Delete</button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>

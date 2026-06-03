@@ -17,9 +17,10 @@ interface Props {
   syncAction: () => Promise<{ success: boolean; count?: number; error?: string }>;
   updateAction: (id: string, name: string, match_type: string, match_format: string, event_id: string | null) => Promise<{ success: boolean; error?: string }>;
   createAction?: (name: string, match_type: string, match_format: string, event_id: string | null) => Promise<{ success: boolean; id?: string; error?: string }>;
+  deleteAction?: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function BattlesClientPage({ initialBattles, availableEvents = [], syncAction, updateAction, createAction }: Props) {
+export default function BattlesClientPage({ initialBattles, availableEvents = [], syncAction, updateAction, createAction, deleteAction }: Props) {
   const [battles, setBattles] = useState<Battle[]>(initialBattles);
   const [isSyncing, setIsSyncing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -115,6 +116,24 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!deleteAction) return;
+    if (!confirm('Are you sure you want to delete this record?')) return;
+    setMessage(null);
+    try {
+      const result = await deleteAction(id);
+      if (result.success) {
+        setMessage({ text: 'Successfully deleted record from Neo4j.', type: 'success' });
+        setBattles(battles.filter(b => b.id !== id));
+      } else {
+        setMessage({ text: `Delete failed: ${result.error}`, type: 'error' });
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      setMessage({ text: 'An unexpected error occurred during deletion.', type: 'error' });
+    }
+  };
+
   const filteredBattles = useMemo(() => {
     let result = [...battles];
     if (searchQuery) {
@@ -126,10 +145,20 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
     
     if (sortConfig) {
       result.sort((a, b) => {
-        const aVal = String(a[sortConfig.key] || '');
-        const bVal = String(b[sortConfig.key] || '');
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (['total_views', 'view_count', 'year'].includes(sortConfig.key)) {
+           const numA = Number(aVal) || 0;
+           const numB = Number(bVal) || 0;
+           return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+        }
+
+        const aStr = String(aVal || '').toLowerCase();
+        const bStr = String(bVal || '').toLowerCase();
+        
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -277,9 +306,6 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="text-[#707070] text-sm border-b border-[#2f2f2f]">
-              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('id')}>
-                ID {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-              </th>
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('name')}>
                 Name {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
@@ -310,7 +336,6 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
                 const eventName = availableEvents.find(e => e.id === battle.event_id)?.name;
                 return (
                   <tr key={battle.id} className="hover:bg-[#202020] transition-colors group">
-                    <td className="py-2.5 px-3 text-[#707070] text-sm font-mono">{battle.id.substring(0, 8)}...</td>
                     <td className="py-2.5 px-3 text-sm text-[#cfcfcf]">
                       {editingId === battle.id ? (
                         <input
@@ -378,7 +403,12 @@ export default function BattlesClientPage({ initialBattles, availableEvents = []
                           <button onClick={handleCancelEdit} className="text-[#707070] hover:text-[#A3A3A3] transition-colors">Cancel</button>
                         </div>
                       ) : (
-                        <button onClick={() => handleEditClick(battle)} className="text-[#707070] hover:text-[#cfcfcf] opacity-0 group-hover:opacity-100 transition-all">Edit</button>
+                        <div className="flex gap-3">
+                          <button onClick={() => handleEditClick(battle)} className="text-[#707070] hover:text-[#cfcfcf] opacity-0 group-hover:opacity-100 transition-all">Edit</button>
+                          {deleteAction && (
+                            <button onClick={() => handleDelete(battle.id)} className="text-[#eb5757] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">Delete</button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>

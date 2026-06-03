@@ -1,6 +1,6 @@
 import { getNeo4jDriver } from '@/lib/neo4j';
 import ParticipantsClientPage from './ParticipantsClientPage';
-import { syncBattleRelationships, updateRelationshipOutcome, createRelationship } from '../actions';
+import { syncBattleRelationships, updateRelationshipOutcome, createRelationship, deleteRelationship } from '../actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -51,7 +51,7 @@ export default async function ParticipantsAdminPage() {
   return (
     <div className="w-full">
       <div className="mb-10">
-        <h1 className="text-3xl font-semibold text-[#FFFFFF] tracking-tight mb-2">Opponents</h1>
+        <h1 className="text-3xl font-semibold text-[#FFFFFF] tracking-tight mb-2">Results</h1>
         <p className="text-[#A3A3A3] text-sm">
           Manage direct Emcee-to-Emcee relationships and battle outcomes.
         </p>
@@ -64,6 +64,7 @@ export default async function ParticipantsAdminPage() {
         syncAction={syncBattleRelationships} 
         updateAction={updateRelationshipOutcome} 
         createAction={createRelationship}
+        deleteAction={deleteRelationship}
       />
     </div>
   );

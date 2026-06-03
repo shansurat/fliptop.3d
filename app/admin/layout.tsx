@@ -9,14 +9,14 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Emcees', href: '/admin' },
     { name: 'Battles', href: '/admin/battles' },
-    { name: 'Opponents', href: '/admin/participants' },
+    { name: 'Results', href: '/admin/participants' },
     { name: 'Events', href: '/admin/events' },
   ];
 
   return (
     <div className="flex min-h-screen bg-[#191919] text-[#cfcfcf] font-sans">
       {/* Sidebar */}
-      <div className="w-64 border-r border-[#2f2f2f] flex flex-col">
+      <div className="w-64 fixed h-screen top-0 left-0 bg-[#191919] border-r border-[#2f2f2f] flex flex-col z-50">
         <div className="p-4 border-b border-[#2f2f2f]">
           <h1 className="text-sm font-semibold text-[#FFFFFF] tracking-tight">fliptop.3d Admin</h1>
         </div>
@@ -39,6 +39,9 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="p-4 border-t border-[#2f2f2f]">
+          <Link href="/" className="w-full text-left px-3 py-2 rounded-md text-sm text-[#A3A3A3] hover:bg-[#202020] hover:text-[#cfcfcf] transition-colors mb-2 block">
+            &larr; Public Page
+          </Link>
           <button
             onClick={async () => {
               const { createClient } = await import('@supabase/supabase-js');
@@ -57,7 +60,7 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 max-w-5xl">
+      <div className="flex-1 p-10 max-w-5xl ml-64">
         {children}
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { getNeo4jDriver } from '@/lib/neo4j';
 import EmceesClientPage from './EmceesClientPage';
-import { syncFromSupabase, updateEmcee, createEmcee } from './actions';
+import { syncFromSupabase, updateEmcee, createEmcee, deleteEmcee } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,6 +33,7 @@ export default async function Neo4jAdminPage() {
         syncAction={syncFromSupabase} 
         updateAction={updateEmcee} 
         createAction={createEmcee}
+        deleteAction={deleteEmcee}
       />
     </div>
   );

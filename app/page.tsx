@@ -39,7 +39,7 @@ export default async function VisualizationAdminPage() {
       </div>
 
       <div className="absolute bottom-6 right-6 z-10 pointer-events-auto">
-        <Link href="/admin" className="text-sm text-[#A3A3A3] hover:text-[#EFEFEF] transition-colors bg-[#191919] border border-[#2F2F2F] shadow-sm px-4 py-2 rounded-md">
+        <Link href="/admin" className="text-sm text-[#A3A3A3] hover:text-[#EFEFEF] transition-all bg-transparent px-4 py-2 rounded-md opacity-60 hover:opacity-100">
           Admin &rarr;
         </Link>
       </div>

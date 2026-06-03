@@ -609,3 +609,81 @@ export async function fetchGraphDataForVisualization() {
     await session.close();
   }
 }
+
+export async function deleteEmcee(id: string) {
+  if (!id) return { success: false, error: 'ID is required' };
+  const driver = getNeo4jDriver();
+  const session = driver.session();
+  try {
+    await session.executeWrite(async (tx) => {
+      await tx.run(`MATCH (e:Emcee {id: $id}) DETACH DELETE e`, { id });
+    });
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Delete error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to delete Emcee';
+    return { success: false, error: message };
+  } finally {
+    await session.close();
+  }
+}
+
+export async function deleteBattle(id: string) {
+  if (!id) return { success: false, error: 'ID is required' };
+  const driver = getNeo4jDriver();
+  const session = driver.session();
+  try {
+    await session.executeWrite(async (tx) => {
+      await tx.run(`MATCH (b:Battle {id: $id}) DETACH DELETE b`, { id });
+    });
+    revalidatePath('/admin/battles');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Delete error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to delete Battle';
+    return { success: false, error: message };
+  } finally {
+    await session.close();
+  }
+}
+
+export async function deleteEvent(id: string) {
+  if (!id) return { success: false, error: 'ID is required' };
+  const driver = getNeo4jDriver();
+  const session = driver.session();
+  try {
+    await session.executeWrite(async (tx) => {
+      await tx.run(`MATCH (e:Event {id: $id}) DETACH DELETE e`, { id });
+    });
+    revalidatePath('/admin/events');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Delete error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to delete Event';
+    return { success: false, error: message };
+  } finally {
+    await session.close();
+  }
+}
+
+export async function deleteRelationship(e1_id: string, e2_id: string, battle_id: string) {
+  const driver = getNeo4jDriver();
+  const session = driver.session();
+  try {
+    await session.executeWrite(async (tx) => {
+      await tx.run(`
+        MATCH (e1:Emcee {id: $e1_id})-[r {battle_id: $battle_id}]-(e2:Emcee {id: $e2_id})
+        DELETE r
+      `, { e1_id, e2_id, battle_id });
+    });
+    revalidatePath('/admin/participants');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Delete error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to delete relationship';
+    return { success: false, error: message };
+  } finally {
+    await session.close();
+  }
+}
