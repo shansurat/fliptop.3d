@@ -131,7 +131,7 @@ function PresentationPageInner() {
 
       {/* Slide Body */}
       <div className="flex-1 my-12 flex items-center justify-center">
-        <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-12 gap-12 items-center bg-[#0c0c0c] border border-white/5 p-12 lg:p-16 rounded-none relative shadow-2xl">
+        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-12 gap-10 items-center bg-[#0c0c0c] border border-white/5 p-8 lg:p-12 rounded-none relative shadow-2xl">
 
           {/* Corner Crosshair Decorations to look like stencils/blueprints */}
           <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 text-zinc-700 font-mono text-lg select-none pointer-events-none">+</div>
@@ -146,12 +146,12 @@ function PresentationPageInner() {
                 {currentSlide.subtitle}
               </span>
             )}
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#EFEFEF] tracking-tight uppercase leading-tight font-sans">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#EFEFEF] tracking-tight uppercase leading-tight font-sans">
               {currentSlide.title}
             </h2>
 
             {currentSlide.description && (
-              <p className="text-lg md:text-2xl text-zinc-400 leading-relaxed max-w-4xl font-light font-sans">
+              <p className="text-base md:text-xl text-zinc-400 leading-relaxed max-w-4xl font-light font-sans">
                 {currentSlide.description}
               </p>
             )}
@@ -164,17 +164,17 @@ function PresentationPageInner() {
                     const prefix = bullet.substring(0, colonIndex);
                     const rest = bullet.substring(colonIndex);
                     return (
-                      <li key={i} className="text-lg md:text-2xl text-zinc-400 leading-relaxed flex items-start font-sans">
+                      <li key={i} className="text-base md:text-lg text-zinc-400 leading-relaxed flex items-start font-sans">
                         <span className="text-amber-500/80 mr-3 font-mono select-none">[-]</span>
                         <span>
-                          <strong className="text-[#EFEFEF] font-mono tracking-wide uppercase text-xl md:text-2xl block md:inline md:mr-2">{prefix}</strong>
+                          <strong className="text-[#EFEFEF] font-mono tracking-wide uppercase text-lg md:text-xl block md:inline md:mr-2">{prefix}</strong>
                           {rest}
                         </span>
                       </li>
                     );
                   }
                   return (
-                    <li key={i} className="text-lg md:text-2xl text-zinc-400 leading-relaxed flex items-start font-sans">
+                    <li key={i} className="text-base md:text-lg text-zinc-400 leading-relaxed flex items-start font-sans">
                       <span className="text-amber-500/80 mr-3 font-mono select-none">[-]</span>
                       <span>{bullet}</span>
                     </li>
