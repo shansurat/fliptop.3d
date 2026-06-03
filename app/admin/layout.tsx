@@ -18,7 +18,7 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <div className="w-64 border-r border-[#2f2f2f] flex flex-col">
         <div className="p-4 border-b border-[#2f2f2f]">
-          <h1 className="text-sm font-semibold text-[#FFFFFF] tracking-tight">Neo4j Management</h1>
+          <h1 className="text-sm font-semibold text-[#FFFFFF] tracking-tight">fliptop.3d Admin</h1>
         </div>
         <nav className="flex-1 p-2 space-y-1">
           {navItems.map((item) => {
@@ -28,8 +28,8 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
                 key={item.name}
                 href={item.href}
                 className={`block px-3 py-2 rounded-md text-sm transition-colors ${isActive
-                    ? 'bg-[#2F2F2F] text-white font-medium'
-                    : 'text-[#A3A3A3] hover:bg-[#202020] hover:text-[#cfcfcf]'
+                  ? 'bg-[#2F2F2F] text-white font-medium'
+                  : 'text-[#A3A3A3] hover:bg-[#202020] hover:text-[#cfcfcf]'
                   }`}
               >
                 {item.name}
@@ -37,7 +37,7 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
-        
+
         <div className="p-4 border-t border-[#2f2f2f]">
           <button
             onClick={async () => {
