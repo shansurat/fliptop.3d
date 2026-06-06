@@ -8,8 +8,6 @@ type Battle = {
   match_type?: string;
   match_format?: string;
   view_count?: number;
-  event_id?: string | null;
-  event_name?: string | null;
   e1_id?: string | null;
   e1_name?: string | null;
   e2_id?: string | null;
@@ -20,7 +18,6 @@ type Battle = {
 
 interface Props {
   initialBattles: Battle[];
-  availableEvents?: { id: string; name: string }[];
   availableEmcees?: { id: string; stage_name: string }[];
   syncAction: () => Promise<{ success: boolean; count?: number; error?: string }>;
   syncRelationshipsAction: () => Promise<{ success: boolean; count?: number; error?: string }>;
@@ -29,7 +26,6 @@ interface Props {
     name: string,
     match_type: string,
     match_format: string,
-    event_id: string | null,
     e1_id: string | null,
     e2_id: string | null,
     outcome: 'e1_won' | 'e2_won' | 'draw' | null
@@ -49,7 +45,6 @@ const uuidv4 = () => {
 
 export default function BattlesClientPage({
   initialBattles,
-  availableEvents = [],
   availableEmcees = [],
   syncAction,
   syncRelationshipsAction,
@@ -64,7 +59,6 @@ export default function BattlesClientPage({
     name: '',
     match_type: 'tournament',
     match_format: '1v1',
-    event_id: '',
     e1_id: '',
     e2_id: '',
     outcome: '' as 'e1_won' | 'e2_won' | 'draw' | ''
@@ -79,7 +73,6 @@ export default function BattlesClientPage({
     name: '',
     match_type: 'tournament',
     match_format: '1v1',
-    event_id: '',
     e1_id: '',
     e2_id: '',
     outcome: 'draw' as 'e1_won' | 'e2_won' | 'draw'
@@ -140,7 +133,6 @@ export default function BattlesClientPage({
       name: battle.name || '',
       match_type: battle.match_type || 'tournament',
       match_format: battle.match_format || '1v1',
-      event_id: battle.event_id || '',
       e1_id: battle.e1_id || '',
       e2_id: battle.e2_id || '',
       outcome: initialOutcome
@@ -157,7 +149,6 @@ export default function BattlesClientPage({
     }
 
     try {
-      const eId = editForm.event_id || null;
       const e1Id = editForm.e1_id || null;
       const e2Id = editForm.e2_id || null;
       const outcomeVal = (e1Id && e2Id) ? (editForm.outcome as 'e1_won' | 'e2_won' | 'draw' || 'draw') : null;
@@ -167,7 +158,6 @@ export default function BattlesClientPage({
         editForm.name,
         editForm.match_type,
         editForm.match_format,
-        eId,
         e1Id,
         e2Id,
         outcomeVal
@@ -178,15 +168,12 @@ export default function BattlesClientPage({
 
         const e1Name = availableEmcees.find(e => e.id === e1Id)?.stage_name || null;
         const e2Name = availableEmcees.find(e => e.id === e2Id)?.stage_name || null;
-        const eventName = availableEvents.find(e => e.id === eId)?.name || null;
 
         setBattles(battles.map(b => b.id === editingBattle.id ? {
           ...b,
           name: editForm.name,
           match_type: editForm.match_type,
           match_format: editForm.match_format,
-          event_id: eId,
-          event_name: eventName,
           e1_id: e1Id,
           e1_name: e1Name,
           e2_id: e2Id,
@@ -214,7 +201,6 @@ export default function BattlesClientPage({
 
     try {
       const newId = uuidv4();
-      const eId = createForm.event_id || null;
       const e1Id = createForm.e1_id || null;
       const e2Id = createForm.e2_id || null;
       const outcomeVal = (e1Id && e2Id) ? (createForm.outcome as 'e1_won' | 'e2_won' | 'draw' || 'draw') : null;
@@ -224,7 +210,6 @@ export default function BattlesClientPage({
         createForm.name,
         createForm.match_type,
         createForm.match_format,
-        eId,
         e1Id,
         e2Id,
         outcomeVal
@@ -234,7 +219,6 @@ export default function BattlesClientPage({
         setMessage({ text: 'Successfully created battle record in Neo4j.', type: 'success' });
         const e1Name = availableEmcees.find(e => e.id === e1Id)?.stage_name || null;
         const e2Name = availableEmcees.find(e => e.id === e2Id)?.stage_name || null;
-        const eventName = availableEvents.find(e => e.id === eId)?.name || null;
 
         setBattles([
           {
@@ -242,8 +226,6 @@ export default function BattlesClientPage({
             name: createForm.name,
             match_type: createForm.match_type,
             match_format: createForm.match_format,
-            event_id: eId,
-            event_name: eventName,
             e1_id: e1Id,
             e1_name: e1Name,
             e2_id: e2Id,
@@ -257,7 +239,6 @@ export default function BattlesClientPage({
           name: '',
           match_type: 'tournament',
           match_format: '1v1',
-          event_id: '',
           e1_id: '',
           e2_id: '',
           outcome: 'draw'
@@ -399,24 +380,9 @@ export default function BattlesClientPage({
                     className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
                   >
                     <option value="1v1">1v1</option>
-                    <option value="2v2">2v2</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] text-[#888] uppercase tracking-widest font-semibold mb-1.5">Event (Optional)</label>
-                <select
-                  value={createForm.event_id}
-                  onChange={(e) => setCreateForm({ ...createForm, event_id: e.target.value })}
-                  className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
-                >
-                  <option value="">No Event</option>
-                  {availableEvents.map(ev => (
-                    <option key={ev.id} value={ev.id}>{ev.name}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="border-t border-white/5 pt-4 my-2">
                 <h4 className="text-[10px] font-bold text-[#EFEFEF] tracking-widest uppercase mb-3">Matchup & Winner</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -453,7 +419,7 @@ export default function BattlesClientPage({
                     <label className="block text-[9px] text-[#888] uppercase tracking-widest font-semibold mb-1.5">Battle Winner</label>
                     <select
                       value={createForm.outcome}
-                      onChange={(e) => setCreateForm({ ...createForm, outcome: e.target.value as any })}
+                      onChange={(e) => setCreateForm({ ...createForm, outcome: e.target.value as 'draw' | 'e1_won' | 'e2_won' })}
                       className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
                     >
                       <option value="draw">Draw / Undecided</option>
@@ -526,24 +492,9 @@ export default function BattlesClientPage({
                     className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
                   >
                     <option value="1v1">1v1</option>
-                    <option value="2v2">2v2</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] text-[#888] uppercase tracking-widest font-semibold mb-1.5">Event (Optional)</label>
-                <select
-                  value={editForm.event_id}
-                  onChange={(e) => setEditForm({ ...editForm, event_id: e.target.value })}
-                  className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
-                >
-                  <option value="">No Event</option>
-                  {availableEvents.map(ev => (
-                    <option key={ev.id} value={ev.id}>{ev.name}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="border-t border-white/5 pt-4 my-2">
                 <h4 className="text-[10px] font-bold text-[#EFEFEF] tracking-widest uppercase mb-3">Matchup & Winner</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -580,7 +531,7 @@ export default function BattlesClientPage({
                     <label className="block text-[9px] text-[#888] uppercase tracking-widest font-semibold mb-1.5">Battle Winner</label>
                     <select
                       value={editForm.outcome}
-                      onChange={(e) => setEditForm({ ...editForm, outcome: e.target.value as any })}
+                      onChange={(e) => setEditForm({ ...editForm, outcome: e.target.value as 'draw' | 'e1_won' | 'e2_won' })}
                       className="w-full bg-[#121212]/40 border border-white/5 text-[#A3A3A3] rounded px-3 py-2 text-xs focus:text-[#EFEFEF] focus:border-white/20 focus:bg-white/[0.04] focus:outline-none transition-all cursor-pointer"
                     >
                       <option value="draw">Draw / Undecided</option>
@@ -649,9 +600,6 @@ export default function BattlesClientPage({
               <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('view_count')}>
                 Views {sortConfig?.key === 'view_count' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
               </th>
-              <th className="py-2 px-3 font-normal cursor-pointer hover:text-white select-none transition-colors" onClick={() => requestSort('event_id')}>
-                Event {sortConfig?.key === 'event_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-              </th>
               <th className="py-2 px-3 font-normal">Actions</th>
             </tr>
           </thead>
@@ -664,7 +612,6 @@ export default function BattlesClientPage({
               </tr>
             ) : (
               paginatedBattles.map((battle) => {
-                const eventName = availableEvents.find(e => e.id === battle.event_id)?.name;
                 return (
                   <tr key={battle.id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="py-2.5 px-3 text-xs text-[#cfcfcf]">
@@ -719,9 +666,6 @@ export default function BattlesClientPage({
 
                     <td className="py-2.5 px-3 text-xs text-[#cfcfcf]">
                       <span className="text-[#A3A3A3] font-mono">{battle.view_count ? battle.view_count.toLocaleString() : '-'}</span>
-                    </td>
-                    <td className="py-2.5 px-3 text-xs text-[#cfcfcf]">
-                      <span className="text-[#A3A3A3]">{eventName || '-'}</span>
                     </td>
                     <td className="py-2.5 px-3 text-xs">
                       <div className="flex gap-3">

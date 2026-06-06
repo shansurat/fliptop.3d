@@ -11,7 +11,6 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Emcees', href: '/admin' },
     { name: 'Battles', href: '/admin/battles' },
-    { name: 'Events', href: '/admin/events' },
   ];
 
   return (
@@ -40,12 +39,7 @@ export default function Neo4jLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="p-4 border-t border-white/5">
-          <Link href="/presentation?slide=0" className="w-full text-left px-3 py-2 rounded-md text-xs tracking-wider uppercase text-[#888] hover:bg-white/[0.02] hover:text-[#EFEFEF] transition-all mb-2 flex items-center gap-1.5 cursor-pointer">
-            <svg className="w-3.5 h-3.5 shrink-0 text-[#888]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-            </svg>
-            Present Slides
-          </Link>
+
           <Link href="/" className="w-full text-left px-3 py-2 rounded-md text-xs tracking-wider uppercase text-[#888] hover:bg-white/[0.02] hover:text-[#EFEFEF] transition-all mb-2 block">
             &larr; Public Page
           </Link>

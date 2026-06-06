@@ -14,38 +14,18 @@ export default async function VisualizationAdminPage() {
 
   return (
     <div className="w-full h-[100dvh] bg-black text-white relative overflow-hidden">
-      {/* Top-Center Mode Navigation */}
-      <div className="absolute top-4 max-md:top-auto max-md:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex gap-0.5 p-1 bg-[#121212]/30 backdrop-blur-md border border-white/5 rounded-md opacity-80 hover:opacity-100 transition-opacity duration-300">
-        <Link
-          href="/"
-          className="px-4 py-1.5 rounded-md text-xs font-medium transition-all bg-white/[0.07] text-[#EFEFEF]"
-        >
-          Standard
-        </Link>
-        <Link
-          href="/hierarchy"
-          className="px-4 py-1.5 rounded-md text-xs font-medium transition-all text-[#A3A3A3] hover:text-[#EFEFEF] hover:bg-white/[0.03]"
-        >
-          Hierarchy
-        </Link>
-      </div>
 
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-10 pointer-events-none">
         <div className="pointer-events-auto opacity-60 hover:opacity-100 transition-opacity duration-300 select-none">
           <h1 className="text-lg font-bold text-[#EFEFEF] tracking-widest uppercase mb-1">fliptop.3d</h1>
           <p className="text-[#666] text-[10px] tracking-wider uppercase max-w-xs leading-relaxed">
-            Interactive WebGL visualization of Emcees, Battles, and Events.
+            Visualization of Emcees and 1v1 Battles.
           </p>
         </div>
       </div>
 
       <div className="absolute bottom-6 right-6 z-[60] pointer-events-auto flex items-center gap-2">
-        <Link href="/presentation?slide=0" className="max-md:hidden text-sm text-[#A3A3A3] hover:text-[#EFEFEF] transition-all bg-transparent px-3 py-2 rounded-md opacity-60 hover:opacity-100 flex items-center gap-1.5">
-          <svg className="w-4 h-4 shrink-0 text-[#a3a3a3]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-          </svg>
-          Present
-        </Link>
+
         <Link href="/admin" className="text-sm text-[#A3A3A3] hover:text-[#EFEFEF] transition-all bg-transparent md:px-3 md:py-2 md:rounded-md max-md:w-10 max-md:h-10 max-md:rounded-md max-md:bg-[#121212]/30 max-md:backdrop-blur-md max-md:border max-md:border-white/5 flex items-center justify-center opacity-60 hover:opacity-100">
           <span className="max-md:hidden">Admin &rarr;</span>
           <svg className="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -53,7 +33,7 @@ export default async function VisualizationAdminPage() {
       </div>
 
       <div className="w-full h-full">
-        <GraphClient graphData={graphData} mode="Standard" />
+        <GraphClient graphData={graphData} />
       </div>
 
 

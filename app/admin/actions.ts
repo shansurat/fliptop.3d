@@ -173,7 +173,10 @@ export async function syncBattlesFromSupabase() {
   try {
     const battles = await fetchAllSupabaseRecords('battles');
 
-    if (!battles || battles.length === 0) {
+    // Only include 1v1 battles
+    const filteredBattles = battles.filter(b => b.match_format === '1v1' || !b.match_format);
+
+    if (!filteredBattles || filteredBattles.length === 0) {
       return { success: true, count: 0 };
     }
 
@@ -181,18 +184,23 @@ export async function syncBattlesFromSupabase() {
     const session = driver.session();
 
     try {
+      await session.executeWrite(async (tx) => {
+        // Delete any non-1v1 battles that might already exist in Neo4j
+        await tx.run(`
+          MATCH (b:Battle) 
+          WHERE b.match_format <> '1v1' AND b.match_format IS NOT NULL 
+          DETACH DELETE b
+        `);
+      });
+
       const result = await session.executeWrite(async (tx) => {
         const query = `
           UNWIND $batch AS row
           MERGE (b:Battle {id: row.id})
           SET b += row
-          FOREACH (ignoreMe IN CASE WHEN row.event_id IS NOT NULL THEN [1] ELSE [] END |
-            MERGE (e:Event {id: row.event_id})
-            MERGE (b)-[:HELD_AT]->(e)
-          )
           RETURN count(b) as syncedCount
         `;
-        const res = await tx.run(query, { batch: battles });
+        const res = await tx.run(query, { batch: filteredBattles });
         return res.records[0].get('syncedCount').toNumber();
       });
 
@@ -209,7 +217,7 @@ export async function syncBattlesFromSupabase() {
   }
 }
 
-export async function updateBattle(id: string, name: string, match_type: string, match_format: string, event_id: string | null = null) {
+export async function updateBattle(id: string, name: string, match_type: string, match_format: string) {
   if (!id) return { success: false, error: 'ID is required' };
   
   const driver = getNeo4jDriver();
@@ -221,24 +229,9 @@ export async function updateBattle(id: string, name: string, match_type: string,
         `
         MATCH (b:Battle {id: $id})
         SET b.name = $name, b.match_type = $match_type, b.match_format = $match_format
-        WITH b
-        OPTIONAL MATCH (b)-[r:HELD_AT]->()
-        DELETE r
-        WITH b
-        CALL {
-          WITH b
-          WITH b WHERE $event_id IS NOT NULL
-          MATCH (e:Event {id: $event_id})
-          MERGE (b)-[:HELD_AT]->(e)
-          RETURN 1 AS _
-          UNION
-          WITH b
-          WITH b WHERE $event_id IS NULL
-          RETURN 1 AS _
-        }
         RETURN b
         `,
-        { id, name, match_type, match_format, event_id }
+        { id, name, match_type, match_format }
       );
     });
     
@@ -254,7 +247,7 @@ export async function updateBattle(id: string, name: string, match_type: string,
   }
 }
 
-export async function createBattle(name: string, match_type: string, match_format: string = '1v1', event_id: string | null = null) {
+export async function createBattle(name: string, match_type: string, match_format: string = '1v1') {
   const driver = getNeo4jDriver();
   const session = driver.session();
   
@@ -264,21 +257,9 @@ export async function createBattle(name: string, match_type: string, match_forma
       await tx.run(
         `
         CREATE (b:Battle {id: $id, name: $name, match_type: $match_type, match_format: $match_format})
-        WITH b
-        CALL {
-          WITH b
-          WITH b WHERE $event_id IS NOT NULL
-          MATCH (e:Event {id: $event_id})
-          MERGE (b)-[:HELD_AT]->(e)
-          RETURN 1 AS _
-          UNION
-          WITH b
-          WITH b WHERE $event_id IS NULL
-          RETURN 1 AS _
-        }
         RETURN b
         `,
-        { id, name, match_type, match_format, event_id }
+        { id, name, match_type, match_format }
       );
     });
     
@@ -311,6 +292,8 @@ export async function syncBattleRelationships() {
     const battledEdges: Record<string, unknown>[] = [];
 
     for (const [battleId, parts] of battlesMap.entries()) {
+      if (parts.length > 2) continue; // Only process 1v1 battles
+
       const teamA = parts.filter(p => (p.team_side as string)?.toLowerCase() === 'a');
       const teamB = parts.filter(p => (p.team_side as string)?.toLowerCase() === 'b');
       
@@ -466,102 +449,6 @@ export async function createRelationship(e1_id: string, e2_id: string, battle_id
   }
 }
 
-export async function syncEventsFromSupabase() {
-  try {
-    const events = await fetchAllSupabaseRecords('events');
-
-    if (!events || events.length === 0) {
-      return { success: true, count: 0 };
-    }
-
-    const driver = getNeo4jDriver();
-    const session = driver.session();
-
-    try {
-      const result = await session.executeWrite(async (tx) => {
-        const query = `
-          UNWIND $batch AS row
-          MERGE (e:Event {id: row.id})
-          SET e.name = row.event_name, e.year = row.year, e.date = row.date, e.venue_name = row.venue_name, e.city = row.city, e.slug = row.slug
-          RETURN count(e) as syncedCount
-        `;
-        const res = await tx.run(query, { batch: events });
-        return res.records[0].get('syncedCount').toNumber();
-      });
-
-      await invalidateCache();
-      revalidatePath('/admin/neo4j/events');
-      return { success: true, count: result };
-    } finally {
-      await session.close();
-    }
-  } catch (error: unknown) {
-    console.error('Sync error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error during sync';
-    return { success: false, error: message };
-  }
-}
-
-export async function updateEvent(id: string, name: string, year: number | string) {
-  if (!id) return { success: false, error: 'ID is required' };
-  
-  const parsedYear = typeof year === 'string' ? parseInt(year, 10) : year;
-  
-  const driver = getNeo4jDriver();
-  const session = driver.session();
-  
-  try {
-    await session.executeWrite(async (tx) => {
-      await tx.run(
-        `
-        MATCH (e:Event {id: $id})
-        SET e.name = $name, e.year = $year
-        RETURN e
-        `,
-        { id, name, year: parsedYear }
-      );
-    });
-    
-    await invalidateCache();
-    revalidatePath('/admin/events');
-    return { success: true };
-  } catch (error: unknown) {
-    console.error('Update error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to update Event';
-    return { success: false, error: message };
-  } finally {
-    await session.close();
-  }
-}
-
-export async function createEvent(name: string, year: number | string) {
-  const parsedYear = typeof year === 'string' ? parseInt(year, 10) : year;
-  const driver = getNeo4jDriver();
-  const session = driver.session();
-  
-  try {
-    const id = crypto.randomUUID();
-    await session.executeWrite(async (tx) => {
-      await tx.run(
-        `
-        CREATE (e:Event {id: $id, name: $name, year: $year})
-        RETURN e
-        `,
-        { id, name, year: parsedYear }
-      );
-    });
-    
-    await invalidateCache();
-    revalidatePath('/admin/events');
-    return { success: true, id };
-  } catch (error: unknown) {
-    console.error('Create error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create Event';
-    return { success: false, error: message };
-  } finally {
-    await session.close();
-  }
-}
 export async function fetchGraphDataForVisualization() {
   const driver = getNeo4jDriver();
   const session = driver.session();
@@ -596,8 +483,6 @@ export async function fetchGraphDataForVisualization() {
       
       if (group === 'Emcee') {
         val = 2 + (battleCount * 0.4); // Emcees scale with total battles
-      } else if (group === 'Event') {
-        val = 8; // Events are large hubs
       } else if (group === 'Battle') {
         val = 1; // Battles are small
       }
@@ -685,7 +570,6 @@ export async function saveBattleAndResult(
   name: string,
   match_type: string,
   match_format: string,
-  event_id: string | null,
   e1_id: string | null,
   e2_id: string | null,
   outcome: 'e1_won' | 'e2_won' | 'draw' | null
@@ -694,29 +578,14 @@ export async function saveBattleAndResult(
   const session = driver.session();
   try {
     await session.executeWrite(async (tx) => {
-      // 1. Update/Create the Battle node and HELD_AT event link
+      // 1. Update/Create the Battle node
       await tx.run(
         `
         MERGE (b:Battle {id: $id})
         SET b.name = $name, b.match_type = $match_type, b.match_format = $match_format
-        WITH b
-        OPTIONAL MATCH (b)-[r:HELD_AT]->()
-        DELETE r
-        WITH b
-        CALL {
-          WITH b
-          WITH b WHERE $event_id IS NOT NULL
-          MATCH (e:Event {id: $event_id})
-          MERGE (b)-[:HELD_AT]->(e)
-          RETURN 1 AS _
-          UNION
-          WITH b
-          WITH b WHERE $event_id IS NULL
-          RETURN 1 AS _
-        }
         RETURN b
         `,
-        { id, name, match_type, match_format, event_id }
+        { id, name, match_type, match_format }
       );
 
       // 2. Delete any existing outcome relationships for this battle_id
@@ -775,25 +644,6 @@ export async function saveBattleAndResult(
 }
 
 
-export async function deleteEvent(id: string) {
-  if (!id) return { success: false, error: 'ID is required' };
-  const driver = getNeo4jDriver();
-  const session = driver.session();
-  try {
-    await session.executeWrite(async (tx) => {
-      await tx.run(`MATCH (e:Event {id: $id}) DETACH DELETE e`, { id });
-    });
-    await invalidateCache();
-    revalidatePath('/admin/events');
-    return { success: true };
-  } catch (error: unknown) {
-    console.error('Delete error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to delete Event';
-    return { success: false, error: message };
-  } finally {
-    await session.close();
-  }
-}
 
 export async function deleteRelationship(e1_id: string, e2_id: string, battle_id: string) {
   const driver = getNeo4jDriver();

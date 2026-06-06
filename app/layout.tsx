@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "fliptop.3d",
-  description: "Interactive WebGL visualization of Emcees, Battles, and Events",
+  description: "Visualization of Emcees and 1v1 Battles",
 };
 
 export default function RootLayout({

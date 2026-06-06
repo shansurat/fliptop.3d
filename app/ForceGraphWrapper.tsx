@@ -29,7 +29,7 @@ const FORMAT_LABELS: Record<string, string> = {
   handicap: 'Handicap',
 };
 
-export default function GraphClient({ graphData, mode }: { graphData: GraphData, mode: 'Standard' | 'Hierarchy' }) {
+export default function GraphClient({ graphData }: { graphData: GraphData }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fgRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -55,7 +55,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
   useEffect(() => {
     setSelectedNodeId(null);
     setSelectedLink(null);
-  }, [selectedYear, mode, selectedMatchType, selectedFormat]);
+  }, [selectedYear, selectedMatchType, selectedFormat]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -69,14 +69,14 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
     const types = new Set<string>();
     graphData.links.forEach(link => {
       if (link.match_type) {
-        if (mode === 'Hierarchy' && !['tournament', 'non_tournament_judged'].includes(link.match_type)) {
+        if (!['tournament', 'non_tournament_judged'].includes(link.match_type)) {
           return;
         }
         types.add(link.match_type);
       }
     });
     return Array.from(types).sort();
-  }, [graphData, mode]);
+  }, [graphData]);
 
   const availableFormats = useMemo(() => {
     const formats = new Set<string>();
@@ -90,15 +90,13 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
     let links = graphData.links;
     let nodes = graphData.nodes;
 
-    if (mode === 'Hierarchy') {
-      links = links.filter(link =>
-        link.type === 'DEFEATED' &&
-        link.match_format === '1v1' &&
-        link.match_type !== 'tryout' &&
-        link.match_type !== 'promo'
-      );
-      nodes = nodes.filter(node => node.group === 'Emcee');
-    }
+    links = links.filter(link =>
+      link.type === 'DEFEATED' &&
+      link.match_format === '1v1' &&
+      link.match_type !== 'tryout' &&
+      link.match_type !== 'promo'
+    );
+    nodes = nodes.filter(node => node.group === 'Emcee');
 
     if (selectedYear !== 'All') {
       const targetYear = parseInt(selectedYear);
@@ -106,11 +104,11 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
     }
 
     if (selectedMatchType !== 'All') {
-      links = links.filter(link => link.match_type === selectedMatchType || link.type === 'ATTENDED');
+      links = links.filter(link => link.match_type === selectedMatchType);
     }
 
     if (selectedFormat !== 'All') {
-      links = links.filter(link => link.match_format === selectedFormat || link.type === 'ATTENDED');
+      links = links.filter(link => link.match_format === selectedFormat);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +121,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
     );
 
     return { nodes, links };
-  }, [graphData, selectedYear, mode, selectedMatchType, selectedFormat]);
+  }, [graphData, selectedYear, selectedMatchType, selectedFormat]);
 
   const nodeStats = useMemo(() => {
     const stats: Record<string, { wins: number; losses: number; draws: number; total: number; winRate: number }> = {};
@@ -296,7 +294,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
 
       return () => window.removeEventListener('resize', updateDimensions);
     }
-  }, [displayData, mode]);
+  }, [displayData]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative group font-sans">
@@ -457,16 +455,12 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
                 const views = node.total_views || 0;
                 baseVal = 1.5 + (Math.sqrt(views) * 0.004);
               }
-            } else if (node.group === 'Event') {
-              baseVal = 8;
             }
 
-            if (mode === 'Hierarchy') {
-              // Exaggerate differences: make 1-battle nodes tiny, but heavily scale up veterans
-              baseVal = Math.pow(baseVal, 1.8) * 0.02;
-              // Ensure a minimum visibility size
-              baseVal = Math.max(0.1, baseVal);
-            }
+            // Exaggerate differences: make 1-battle nodes tiny, but heavily scale up veterans
+            baseVal = Math.pow(baseVal, 1.8) * 0.02;
+            // Ensure a minimum visibility size
+            baseVal = Math.max(0.1, baseVal);
             if (selectedNodeId || selectedLink) {
               if (node.id === selectedNodeId) return baseVal * 2.5;
               if (highlightNodes.has(node.id)) return baseVal * 1.8;
@@ -483,7 +477,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
               const rate = nodeStats[node.id]?.winRate ?? 0.5;
               return getWinRateColor(rate);
             }
-            if (node.group === 'Event') return '#ffb84d';
             return '#888888';
           }}
           nodeRelSize={4}
@@ -506,7 +499,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
               }
               return '#1a1a1a'; // Dimmed
             }
-            if (link.type === 'ATTENDED') return '#b45309'; // Darker gold/orange
             if (link.match_type === 'tournament') return '#b59210'; // Darker metallic gold
             if (link.match_type === 'promo') return '#be185d'; // Darker magenta
             if (link.match_type === 'tryout') return '#0369a1'; // Darker blue
@@ -519,8 +511,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
             let baseWidth = .6; // Slightly thicker default link width
             if (link.type === 'DEFEATED' || link.type === 'BATTLED') {
               if (['2v2', '3v3', '5v5'].includes(link.match_format)) baseWidth = 1.4;
-            } else if (link.type === 'ATTENDED') {
-              baseWidth = 0.3;
             }
 
             if (selectedNodeId || selectedLink) {
@@ -530,7 +520,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
             return baseWidth;
           }}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          linkDirectionalArrowLength={(link: any) => link.type === 'DEFEATED' ? 4 : link.type === 'ATTENDED' ? 3 : 0}
+          linkDirectionalArrowLength={(link: any) => link.type === 'DEFEATED' ? 4 : 0}
           linkDirectionalArrowRelPos={1}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           linkDirectionalParticles={(link: any) => {
@@ -570,7 +560,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
             }
             if (link.match_type === 'tournament') return '#FFD700';
             if (link.match_format === 'royal_rumble') return '#FF6B6B';
-            if (link.type === 'ATTENDED') return '#ffb84d';
             return '#ff4d4d';
           }}
           backgroundColor="#0a0a0a"
@@ -597,13 +586,12 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
             }
           }}
           onLinkClick={(link: any) => {
-            if (link.type === 'ATTENDED') return;
             setSelectedNodeId(null);
             setSelectedLink(selectedLink === link ? null : link);
           }}
           onBackgroundClick={() => { setSelectedNodeId(null); setSelectedLink(null); }}
           onEngineStop={() => {
-            if (mode === 'Hierarchy' && fgRef.current && !selectedNodeId) {
+            if (fgRef.current && !selectedNodeId) {
               fgRef.current.zoomToFit(400);
             }
           }}
@@ -783,7 +771,7 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
 
 
       {/* Link Details Panel */}
-      {selectedLink && selectedLink.type !== 'ATTENDED' && (() => {
+      {selectedLink && (() => {
         const sourceId = typeof selectedLink.source === 'object' ? selectedLink.source.id : selectedLink.source;
         const targetId = typeof selectedLink.target === 'object' ? selectedLink.target.id : selectedLink.target;
         const sourceName = graphData.nodes.find(n => n.id === sourceId)?.name || sourceId;
@@ -926,7 +914,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
           </div>
         </div>
 
-        {mode === 'Hierarchy' ? (
           <div className="flex gap-6 mt-4">
             <div className="space-y-1.5">
               <p className="text-[9px] text-[#555] uppercase tracking-widest font-bold">Nodes</p>
@@ -947,44 +934,6 @@ export default function GraphClient({ graphData, mode }: { graphData: GraphData,
               </div>
             </div>
           </div>
-        ) : (
-          <div className="flex gap-6 mt-4">
-            <div className="space-y-1.5 flex-1">
-              <p className="text-[9px] text-[#555] uppercase tracking-widest font-bold">Nodes</p>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#4ade80]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Emcee Win Rate</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#ffb84d]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Event</span>
-              </div>
-            </div>
-            <div className="space-y-1.5 flex-1">
-              <p className="text-[9px] text-[#555] uppercase tracking-widest font-bold">Edges</p>
-              <div className="flex items-center gap-2">
-                <div className="w-3.5 h-0.5 bg-[#FFD700]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Tournament</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3.5 h-0.5 bg-[#ec4899]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Promo</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3.5 h-0.5 bg-[#06b6d4]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Tryout</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3.5 h-0.5 bg-[#718096]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Defeated / Battled</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3.5 h-0.5 bg-[#ffb84d]"></div>
-                <span className="text-[10px] text-[#A3A3A3] font-medium">Attended Event</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -8,16 +8,15 @@ export const revalidate = 0;
 export default async function BattlesAdminPage() {
   const driver = getNeo4jDriver();
   const session = driver.session();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let battles: any[] = [];
-  let events: { id: string; name: string }[] = [];
   let emcees: { id: string; stage_name: string }[] = [];
 
   try {
     const result = await session.run(`
       MATCH (b:Battle)
-      OPTIONAL MATCH (b)-[:HELD_AT]->(ev:Event)
       OPTIONAL MATCH (e1:Emcee)-[r]->(e2:Emcee) WHERE r.battle_id = b.id AND type(r) IN ['BATTLED', 'DEFEATED']
-      WITH b, ev,
+      WITH b,
            CASE WHEN r IS NOT NULL THEN {
              e1_id: e1.id,
              e1_name: e1.stage_name,
@@ -25,8 +24,8 @@ export default async function BattlesAdminPage() {
              e2_name: e2.stage_name,
              outcome: type(r)
            } ELSE null END AS rel
-      WITH b, ev, collect(rel) AS rels
-      RETURN b, ev.id AS event_id, ev.name AS event_name,
+      WITH b, collect(rel) AS rels
+      RETURN b,
              [r in rels WHERE r is not null] AS relationships
       ORDER BY b.name ASC
     `);
@@ -36,8 +35,6 @@ export default async function BattlesAdminPage() {
       const rel = rels[0] || null;
       return {
         ...bProps,
-        event_id: record.get('event_id'),
-        event_name: record.get('event_name'),
         e1_id: rel ? rel.e1_id : null,
         e1_name: rel ? rel.e1_name : null,
         e2_id: rel ? rel.e2_id : null,
@@ -45,13 +42,6 @@ export default async function BattlesAdminPage() {
         outcome: rel ? rel.outcome : null
       };
     });
-
-    const eventsResult = await session.run(`
-      MATCH (e:Event)
-      RETURN e.id AS id, e.name AS name
-      ORDER BY e.year DESC
-    `);
-    events = eventsResult.records.map(r => ({ id: r.get('id'), name: r.get('name') }));
 
     const emceesResult = await session.run(`
       MATCH (e:Emcee)
@@ -77,7 +67,6 @@ export default async function BattlesAdminPage() {
 
       <BattlesClientPage
         initialBattles={battles}
-        availableEvents={events}
         availableEmcees={emcees}
         syncAction={syncBattlesFromSupabase}
         syncRelationshipsAction={syncBattleRelationships}
